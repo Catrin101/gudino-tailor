@@ -105,67 +105,64 @@ export function ClientesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Gestión de Clientes</h1>
-          <p className="text-gray-600 mt-2">
-            Administra la información de tus clientes
-          </p>
-        </div>
+    <div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900">Gestión de Clientes</h1>
+        <p className="text-gray-600 mt-2">
+          Administra la información de tus clientes
+        </p>
+      </div>
 
-        {/* Mensaje de notificación */}
-        {mensaje && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            mensaje.tipo === 'success' 
-              ? 'bg-success-50 text-success-700 border border-success-200' 
-              : 'bg-danger-50 text-danger-700 border border-danger-200'
+      {/* Mensaje de notificación */}
+      {mensaje && (
+        <div className={`mb-6 p-4 rounded-lg ${mensaje.tipo === 'success'
+          ? 'bg-success-50 text-success-700 border border-success-200'
+          : 'bg-danger-50 text-danger-700 border border-danger-200'
           }`}>
-            {mensaje.texto}
-          </div>
-        )}
+          {mensaje.texto}
+        </div>
+      )}
 
-        {/* Error global */}
-        {error && (
-          <div className="mb-6 p-4 rounded-lg bg-danger-50 text-danger-700 border border-danger-200">
-            ⚠️ {error}
-          </div>
-        )}
+      {/* Error global */}
+      {error && (
+        <div className="mb-6 p-4 rounded-lg bg-danger-50 text-danger-700 border border-danger-200">
+          ⚠️ {error}
+        </div>
+      )}
 
-        {/* Contenido principal */}
-        {vistaActual === 'lista' ? (
-          <ListaClientes
-            clientes={clientes}
-            onClienteClick={handleClienteClick}
-            onNuevoCliente={handleNuevoCliente}
-            onBuscar={buscarClientes}
+      {/* Contenido principal */}
+      {vistaActual === 'lista' ? (
+        <ListaClientes
+          clientes={clientes}
+          onClienteClick={handleClienteClick}
+          onNuevoCliente={handleNuevoCliente}
+          onBuscar={buscarClientes}
+          loading={loading}
+        />
+      ) : (
+        <Card className="max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold mb-6">
+            {clienteSeleccionado ? 'Editar Cliente' : 'Nuevo Cliente'}
+          </h2>
+          <FormularioCliente
+            cliente={clienteSeleccionado}
+            onGuardar={handleGuardar}
+            onCancelar={handleCancelar}
             loading={loading}
           />
-        ) : (
-          <Card className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6">
-              {clienteSeleccionado ? 'Editar Cliente' : 'Nuevo Cliente'}
-            </h2>
-            <FormularioCliente
-              cliente={clienteSeleccionado}
-              onGuardar={handleGuardar}
-              onCancelar={handleCancelar}
-              loading={loading}
-            />
-          </Card>
-        )}
+        </Card>
+      )}
 
-        {/* Modal de detalles */}
-        {mostrarModal && clienteSeleccionado && (
-          <ModalCliente
-            cliente={clienteSeleccionado}
-            onCerrar={() => setMostrarModal(false)}
-            onEditar={handleEditar}
-            onDesactivar={handleDesactivar}
-          />
-        )}
-      </div>
+      {/* Modal de detalles */}
+      {mostrarModal && clienteSeleccionado && (
+        <ModalCliente
+          cliente={clienteSeleccionado}
+          onCerrar={() => setMostrarModal(false)}
+          onEditar={handleEditar}
+          onDesactivar={handleDesactivar}
+        />
+      )}
     </div>
   )
 }
