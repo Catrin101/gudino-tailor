@@ -22,7 +22,7 @@ export function PagosPage() {
     cargarResumenDia
   } = usePagos()
 
-  const { pedidos } = usePedidos()
+  const { pedidos, cargarPedidos: cargarPedidosCompletos } = usePedidos()
 
   const [vistaActual, setVistaActual] = useState('resumen') // 'resumen' | 'historial' | 'registrar'
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null)
@@ -33,9 +33,11 @@ export function PagosPage() {
     busqueda: ''
   })
 
+  // Cargar pedidos al inicio
   useEffect(() => {
     cargarResumenDia()
     cargarPagosPorFechas(filtros.fechaInicio, filtros.fechaFin)
+    cargarPedidosCompletos() // Cargar pedidos para poder buscarlos
   }, [])
 
   /**
@@ -148,8 +150,8 @@ export function PagosPage() {
             <button
               onClick={() => setVistaActual('resumen')}
               className={`px-4 py-2 font-medium transition-colors ${vistaActual === 'resumen'
-                  ? 'text-primary-700 border-b-2 border-primary-700'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'text-primary-700 border-b-2 border-primary-700'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               Resumen del Día
@@ -157,8 +159,8 @@ export function PagosPage() {
             <button
               onClick={() => setVistaActual('historial')}
               className={`px-4 py-2 font-medium transition-colors ${vistaActual === 'historial'
-                  ? 'text-primary-700 border-b-2 border-primary-700'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'text-primary-700 border-b-2 border-primary-700'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               Historial de Pagos
@@ -170,8 +172,8 @@ export function PagosPage() {
       {/* Mensaje de notificación */}
       {mensaje && (
         <div className={`mb-6 p-4 rounded-lg ${mensaje.tipo === 'success'
-            ? 'bg-success-50 text-success-700 border border-success-200'
-            : 'bg-danger-50 text-danger-700 border border-danger-200'
+          ? 'bg-success-50 text-success-700 border border-success-200'
+          : 'bg-danger-50 text-danger-700 border border-danger-200'
           }`}>
           {mensaje.texto}
         </div>
@@ -226,10 +228,10 @@ export function PagosPage() {
                             Pedido #{pago.id_pedido}
                           </span>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${pago.concepto === 'Anticipo'
-                              ? 'bg-blue-100 text-blue-700'
-                              : pago.concepto === 'Abono'
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : 'bg-green-100 text-green-700'
+                            ? 'bg-blue-100 text-blue-700'
+                            : pago.concepto === 'Abono'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-green-100 text-green-700'
                             }`}>
                             {pago.concepto}
                           </span>
@@ -394,10 +396,10 @@ export function PagosPage() {
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${pago.concepto === 'Anticipo'
-                              ? 'bg-blue-100 text-blue-700'
-                              : pago.concepto === 'Abono'
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : 'bg-green-100 text-green-700'
+                            ? 'bg-blue-100 text-blue-700'
+                            : pago.concepto === 'Abono'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-green-100 text-green-700'
                             }`}>
                             {pago.concepto}
                           </span>

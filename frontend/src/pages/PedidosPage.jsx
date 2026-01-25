@@ -8,6 +8,7 @@ import { Button } from '../shared/components/Button'
 import { Plus, LayoutGrid, List, Search } from 'lucide-react'
 import { ESTADOS_PEDIDO } from '../core/constants/estados'
 
+
 /**
  * Página principal del módulo de pedidos
  */
@@ -27,6 +28,8 @@ export function PedidosPage() {
   const [mostrarModal, setMostrarModal] = useState(false)
   const [mensaje, setMensaje] = useState(null)
   const [terminoBusqueda, setTerminoBusqueda] = useState('')
+  const [mostrarModalPago, setMostrarModalPago] = useState(false)
+  const [pedidoParaPago, setPedidoParaPago] = useState(null)
 
   /**
    * Mostrar mensaje temporal
@@ -91,8 +94,43 @@ export function PedidosPage() {
    * Registrar pago (placeholder)
    */
   const handleRegistrarPago = (pedido) => {
-    mostrarMensaje('Función de registro de pago próximamente...', 'error')
-    // TODO: Implementar cuando tengamos el módulo de pagos
+    setPedidoParaPago(pedido)
+    setMostrarModalPago(true)
+    setMostrarModal(false) // Cerrar modal de detalles
+  }
+
+  /**
+   * Guardar pago desde el modal
+   */
+  const handleGuardarPago = async (datoPago) => {
+    try {
+      // Importar el servicio de pagos
+      const { PagoService } = await import('../features/pagos/services/PagoService')
+      const pagoService = new PagoService()
+
+      await pagoService.registrar(datoPago)
+
+      mostrarMensaje('Pago registrado correctamente')
+      setMostrarModalPago(false)
+      setPedidoParaPago(null)
+
+      // Recargar pedidos para actualizar saldos
+      await cargarPedidos()
+    } catch (err) {
+      if (err.advertencias) {
+        // Error de sobrepago - necesita confirmación
+        const confirmar = window.confirm(
+          `${err.advertencias[0].mensaje}\n\n¿Desea continuar y generar un crédito a favor del cliente?`
+        )
+
+        if (confirmar) {
+          // Reintentar con confirmación
+          await handleGuardarPago({ ...datoPago, confirmarSobrepago: true })
+        }
+      } else {
+        mostrarMensaje(err.message, 'error')
+      }
+    }
   }
 
   /**
