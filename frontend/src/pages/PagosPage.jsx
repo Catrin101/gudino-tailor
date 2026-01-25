@@ -422,28 +422,122 @@ export function PagosPage() {
 
       {/* VISTA: Registrar pago */}
       {vistaActual === 'registrar' && (
-        <Card className="max-w-2xl mx-auto">
+        <Card className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold mb-6">Registrar Pago</h2>
 
           {!pedidoSeleccionado ? (
             <div>
               <p className="text-gray-600 mb-4">
-                Ingresa el número de pedido para registrar un pago
+                Busca el pedido por nombre de cliente o número de pedido
               </p>
 
-              <div className="relative">
+              <div className="relative mb-6">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
-                  type="number"
-                  placeholder="Número de pedido..."
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleBuscarPedido(e.target.value)
-                    }
-                  }}
+                  type="text"
+                  placeholder="Buscar por nombre de cliente o #pedido..."
+                  value={filtros.busqueda}
+                  onChange={(e) => setFiltros(prev => ({ ...prev, busqueda: e.target.value }))}
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-lg
                            focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
+              </div>
+
+              {/* Lista de pedidos con saldo pendiente */}
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {pedidos
+                  .filter(p => {
+                    // Filtrar solo pedidos con saldo pendiente
+                    if (p.saldo_pendiente <= 0) return false
+                    if (p.estado === 'Entregado') return false
+
+                    // Aplicar búsqueda
+                    if (filtros.busqueda.trim()) {
+                      const termino = filtros.busqueda.toLowerCase()
+                      const nombreCliente = p.clientes?.nombre?.toLowerCase() || ''
+                      const idPedido = p.id_pedido.toString()
+
+                      return nombreCliente.includes(termino) || idPedido.includes(termino)
+                    }
+
+                    return true
+                  })
+                  .map(pedido => (
+                    <button
+                      key={pedido.id_pedido}
+                      onClick={() => setPedidoSeleccionado(pedido)}
+                      className="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-all"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="font-bold text-gray-900">
+                              Pedido #{pedido.id_pedido}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${pedido.tipo_servicio === 'Confeccion'
+                                ? 'bg-blue-100 text-blue-700'
+                                : pedido.tipo_servicio === 'Remiendo'
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-purple-100 text-purple-700'
+                              }`}>
+                              {pedido.tipo_servicio}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${pedido.estado === 'En Espera'
+                                ? 'bg-gray-100 text-gray-700'
+                                : pedido.estado === 'En Proceso'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : pedido.estado === 'Prueba'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-green-100 text-green-700'
+                              }`}>
+                              {pedido.estado}
+                            </span>
+                          </div>
+
+                          <p className="text-gray-900 font-medium mb-1">
+                            {pedido.clientes?.nombre || 'Sin cliente'}
+                          </p>
+
+                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <span>Total: ${parseFloat(pedido.costo_total).toFixed(2)}</span>
+                            <span>•</span>
+                            <span>Pagado: ${(parseFloat(pedido.costo_total) - parseFloat(pedido.saldo_pendiente)).toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600 mb-1">Saldo Pendiente</p>
+                          <p className="text-2xl font-bold text-warning-600">
+                            ${parseFloat(pedido.saldo_pendiente).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+
+                {pedidos.filter(p => {
+                  if (p.saldo_pendiente <= 0) return false
+                  if (p.estado === 'Entregado') return false
+
+                  if (filtros.busqueda.trim()) {
+                    const termino = filtros.busqueda.toLowerCase()
+                    const nombreCliente = p.clientes?.nombre?.toLowerCase() || ''
+                    const idPedido = p.id_pedido.toString()
+                    return nombreCliente.includes(termino) || idPedido.includes(termino)
+                  }
+
+                  return true
+                }).length === 0 && (
+                    <div className="text-center py-12">
+                      <DollarSign className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">
+                        {filtros.busqueda.trim()
+                          ? 'No se encontraron pedidos con saldo pendiente'
+                          : 'No hay pedidos con saldo pendiente'
+                        }
+                      </p>
+                    </div>
+                  )}
               </div>
 
               <div className="mt-6">

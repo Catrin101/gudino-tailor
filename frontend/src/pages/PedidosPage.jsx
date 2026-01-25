@@ -97,6 +97,8 @@ export function PedidosPage() {
     setPedidoParaPago(pedido)
     setMostrarModalPago(true)
     setMostrarModal(false) // Cerrar modal de detalles
+    // Navegar a la página de pagos con el pedido seleccionado
+    window.location.href = `/pagos?pedido=${pedido.id_pedido}`
   }
 
   /**
