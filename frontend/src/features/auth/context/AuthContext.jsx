@@ -135,7 +135,7 @@ export function AuthProvider({ children }) {
         return {
             id: user.id,
             email: user.email,
-            nombre: 'Don Enrique',
+            nombre: 'Enrique',
             rol: 'Administrador'
         }
     }
