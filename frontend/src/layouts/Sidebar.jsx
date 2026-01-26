@@ -1,9 +1,9 @@
-import { 
-  LayoutDashboard, 
-  Users, 
-  Ruler, 
-  Package, 
-  DollarSign, 
+import {
+  LayoutDashboard,
+  Users,
+  Ruler,
+  Package,
+  DollarSign,
   Settings,
   X,
   ChevronLeft
@@ -41,8 +41,7 @@ export function Sidebar({ isOpen, onClose }) {
       id: 'pedidos',
       label: 'Pedidos',
       icon: Package,
-      path: '/pedidos',
-      badge: '5' // Ejemplo de badge
+      path: '/pedidos'
     },
     {
       id: 'pagos',
