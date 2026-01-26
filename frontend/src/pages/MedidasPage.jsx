@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNotification } from '../shared/context/NotificationContext'
 import { useClientes } from '../features/clientes/hooks/useClientes'
 import { useMedidas } from '../features/medidas/hooks/useMedidas'
 import { FormularioMedidas } from '../features/medidas/components/FormularioMedidas'
@@ -35,17 +36,10 @@ export function MedidasPage() {
   const [mostrarComparacion, setMostrarComparacion] = useState(false)
   const [medidaComparar, setMedidaComparar] = useState(null)
   const [cambiosExtremos, setCambiosExtremos] = useState([])
-  const [mensaje, setMensaje] = useState(null)
+
+  const notification = useNotification()
 
   const medidaService = new MedidaService()
-
-  /**
-   * Mostrar mensaje temporal
-   */
-  const mostrarMensaje = (texto, tipo = 'success') => {
-    setMensaje({ texto, tipo })
-    setTimeout(() => setMensaje(null), 3000)
-  }
 
   /**
    * Seleccionar cliente y cargar su historial
@@ -86,11 +80,15 @@ export function MedidasPage() {
 
         if (cambios.length > 0) {
           // Mostrar confirmación si hay cambios extremos
-          const confirmar = window.confirm(
-            `Se detectaron ${cambios.length} cambios extremos en las medidas.\n\n` +
-            cambios.map(c => `• ${c.campo}: ${c.diferencia}cm de diferencia`).join('\n') +
-            '\n\n¿Deseas continuar guardando estas medidas?'
-          )
+          const confirmar = await notification.showConfirm({
+            title: 'Cambios Extremos Detectados',
+            message: `Se detectaron ${cambios.length} cambios extremos en las medidas.\n\n` +
+              cambios.map(c => `• ${c.campo}: ${c.diferencia}cm de diferencia`).join('\n') +
+              '\n\n¿Deseas continuar guardando estas medidas?',
+            type: 'warning',
+            confirmText: 'Sí, guardar',
+            cancelText: 'Revisar'
+          })
 
           if (!confirmar) {
             return
@@ -105,7 +103,7 @@ export function MedidasPage() {
         etiqueta: datosMedidas.etiqueta
       })
 
-      mostrarMensaje('Medidas guardadas correctamente')
+      notification.success('Medidas guardadas correctamente')
       setVistaActual('historial')
       setTipoMedidaSeleccionado(null)
       setMedidasAnteriores(null)
@@ -114,7 +112,7 @@ export function MedidasPage() {
       // Recargar medidas
       await cargarMedidas(clienteSeleccionado.id_cliente)
     } catch (err) {
-      mostrarMensaje(err.message, 'error')
+      notification.error(err.message)
     }
   }
 
@@ -146,7 +144,7 @@ export function MedidasPage() {
       setMedidaComparar(anterior)
       setMostrarComparacion(true)
     } else {
-      mostrarMensaje('No hay versión anterior para comparar', 'error')
+      notification.error('No hay versión anterior para comparar')
     }
   }
 
@@ -154,16 +152,24 @@ export function MedidasPage() {
    * Eliminar medida
    */
   const handleEliminar = async (medida) => {
-    if (!confirm(`¿Eliminar medida "${medida.etiqueta || 'sin etiqueta'}"?`)) {
+    const confirmar = await notification.showConfirm({
+      title: 'Eliminar Medida',
+      message: `¿Eliminar medida "${medida.etiqueta || 'sin etiqueta'}"?`,
+      type: 'danger',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar'
+    })
+
+    if (!confirmar) {
       return
     }
 
     try {
       await eliminarMedida(medida.id_medida)
-      mostrarMensaje('Medida eliminada correctamente')
+      notification.success('Medida eliminada correctamente')
       setMostrarModal(false)
     } catch (err) {
-      mostrarMensaje(err.message, 'error')
+      notification.error(err.message)
     }
   }
 
@@ -190,16 +196,6 @@ export function MedidasPage() {
           Historial de medidas y versionado por cliente
         </p>
       </div>
-
-      {/* Mensaje de notificación */}
-      {mensaje && (
-        <div className={`mb-6 p-4 rounded-lg ${mensaje.tipo === 'success'
-            ? 'bg-success-50 text-success-700 border border-success-200'
-            : 'bg-danger-50 text-danger-700 border border-danger-200'
-          }`}>
-          {mensaje.texto}
-        </div>
-      )}
 
       {/* Error global */}
       {error && (
@@ -369,7 +365,7 @@ export function MedidasPage() {
           onCerrar={() => setMostrarModal(false)}
           onEditar={(medida) => {
             // TODO: Implementar edición
-            mostrarMensaje('Edición no implementada aún', 'error')
+            notification.info('Edición no implementada aún')
           }}
           onEliminar={handleEliminar}
         />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNotification } from '../shared/context/NotificationContext'
 import { usePedidos } from '../features/pedidos/hooks/usePedidos'
 import { WizardPedido } from '../features/pedidos/components/WizardPedido'
 import { ColumnaKanban } from '../features/pedidos/components/ColumnaKanban'
@@ -26,18 +27,12 @@ export function PedidosPage() {
   const [vistaActual, setVistaActual] = useState('kanban') // 'kanban' | 'lista' | 'wizard'
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null)
   const [mostrarModal, setMostrarModal] = useState(false)
-  const [mensaje, setMensaje] = useState(null)
+
   const [terminoBusqueda, setTerminoBusqueda] = useState('')
   const [mostrarModalPago, setMostrarModalPago] = useState(false)
   const [pedidoParaPago, setPedidoParaPago] = useState(null)
 
-  /**
-   * Mostrar mensaje temporal
-   */
-  const mostrarMensaje = (texto, tipo = 'success') => {
-    setMensaje({ texto, tipo })
-    setTimeout(() => setMensaje(null), 3000)
-  }
+  const notification = useNotification()
 
   /**
    * Iniciar creación de pedido
@@ -52,18 +47,26 @@ export function PedidosPage() {
   const handleGuardarPedido = async (datosPedido) => {
     try {
       const nuevoPedido = await crearPedido(datosPedido)
-      mostrarMensaje(`Pedido #${nuevoPedido.id_pedido} creado correctamente`)
+      notification.success(`Pedido #${nuevoPedido.id_pedido} creado correctamente`)
       setVistaActual('kanban')
     } catch (err) {
-      mostrarMensaje(err.message, 'error')
+      notification.error(err.message)
     }
   }
 
   /**
    * Cancelar creación
    */
-  const handleCancelar = () => {
-    if (confirm('¿Cancelar la creación del pedido? Se perderán los datos ingresados.')) {
+  const handleCancelar = async () => {
+    const confirmar = await notification.showConfirm({
+      title: 'Cancelar Pedido',
+      message: '¿Cancelar la creación del pedido? Se perderán los datos ingresados.',
+      type: 'warning',
+      confirmText: 'Sí, cancelar',
+      cancelText: 'Continuar editando'
+    })
+
+    if (confirmar) {
       setVistaActual('kanban')
     }
   }
@@ -82,11 +85,11 @@ export function PedidosPage() {
   const handleCambiarEstado = async (idPedido, nuevoEstado) => {
     try {
       await cambiarEstado(idPedido, nuevoEstado)
-      mostrarMensaje(`Estado actualizado a: ${nuevoEstado}`)
+      notification.success(`Estado actualizado a: ${nuevoEstado}`)
       setMostrarModal(false)
       setPedidoSeleccionado(null)
     } catch (err) {
-      mostrarMensaje(err.message, 'error')
+      notification.error(err.message)
     }
   }
 
@@ -112,7 +115,7 @@ export function PedidosPage() {
 
       await pagoService.registrar(datoPago)
 
-      mostrarMensaje('Pago registrado correctamente')
+      notification.success('Pago registrado correctamente')
       setMostrarModalPago(false)
       setPedidoParaPago(null)
 
@@ -121,16 +124,20 @@ export function PedidosPage() {
     } catch (err) {
       if (err.advertencias) {
         // Error de sobrepago - necesita confirmación
-        const confirmar = window.confirm(
-          `${err.advertencias[0].mensaje}\n\n¿Desea continuar y generar un crédito a favor del cliente?`
-        )
+        const confirmar = await notification.showConfirm({
+          title: 'Sobrepago Detectado',
+          message: `${err.advertencias[0].mensaje}\n\n¿Desea continuar y generar un crédito a favor del cliente?`,
+          type: 'warning',
+          confirmText: 'Sí, continuar',
+          cancelText: 'Cancelar'
+        })
 
         if (confirmar) {
           // Reintentar con confirmación
           await handleGuardarPago({ ...datoPago, confirmarSobrepago: true })
         }
       } else {
-        mostrarMensaje(err.message, 'error')
+        notification.error(err.message)
       }
     }
   }
@@ -230,16 +237,6 @@ export function PedidosPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Mensaje de notificación */}
-      {mensaje && (
-        <div className={`mb-6 p-4 rounded-lg ${mensaje.tipo === 'success'
-          ? 'bg-success-50 text-success-700 border border-success-200'
-          : 'bg-danger-50 text-danger-700 border border-danger-200'
-          }`}>
-          {mensaje.texto}
         </div>
       )}
 

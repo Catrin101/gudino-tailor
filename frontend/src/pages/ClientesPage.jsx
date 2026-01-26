@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useClientes } from '../features/clientes/hooks/useClientes'
+import { useNotification } from '../shared/context/NotificationContext'
 import { ListaClientes } from '../features/clientes/components/ListaClientes'
 import { FormularioCliente } from '../features/clientes/components/FormularioCliente'
 import { ModalCliente } from '../features/clientes/components/ModalCliente'
@@ -23,15 +24,7 @@ export function ClientesPage() {
   const [vistaActual, setVistaActual] = useState('lista') // 'lista' | 'formulario'
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
   const [mostrarModal, setMostrarModal] = useState(false)
-  const [mensaje, setMensaje] = useState(null)
-
-  /**
-   * Mostrar mensaje temporal
-   */
-  const mostrarMensaje = (texto, tipo = 'success') => {
-    setMensaje({ texto, tipo })
-    setTimeout(() => setMensaje(null), 3000)
-  }
+  const notification = useNotification()
 
   /**
    * Manejar creación de nuevo cliente
@@ -66,16 +59,16 @@ export function ClientesPage() {
       if (clienteSeleccionado) {
         // Actualizar
         await actualizarCliente(clienteSeleccionado.id_cliente, datosCliente)
-        mostrarMensaje('Cliente actualizado correctamente')
+        notification.success('Cliente actualizado correctamente')
       } else {
         // Crear
         await crearCliente(datosCliente)
-        mostrarMensaje('Cliente creado correctamente')
+        notification.success('Cliente creado correctamente')
       }
       setVistaActual('lista')
       setClienteSeleccionado(null)
     } catch (err) {
-      mostrarMensaje(err.message, 'error')
+      notification.error(err.message)
     }
   }
 
@@ -83,16 +76,22 @@ export function ClientesPage() {
    * Manejar desactivación
    */
   const handleDesactivar = async (cliente) => {
-    if (!confirm(`¿Estás seguro de desactivar a ${cliente.nombre}?`)) {
-      return
-    }
+    const confirmado = await notification.showConfirm({
+      title: 'Desactivar Cliente',
+      message: `¿Estás seguro de desactivar a ${cliente.nombre}?`,
+      type: 'danger',
+      confirmText: 'Sí, desactivar',
+      cancelText: 'Cancelar'
+    })
+
+    if (!confirmado) return
 
     try {
       await desactivarCliente(cliente.id_cliente)
-      mostrarMensaje('Cliente desactivado correctamente')
+      notification.success('Cliente desactivado correctamente')
       setMostrarModal(false)
     } catch (err) {
-      mostrarMensaje(err.message, 'error')
+      notification.error(err.message)
     }
   }
 
@@ -113,16 +112,6 @@ export function ClientesPage() {
           Administra la información de tus clientes
         </p>
       </div>
-
-      {/* Mensaje de notificación */}
-      {mensaje && (
-        <div className={`mb-6 p-4 rounded-lg ${mensaje.tipo === 'success'
-          ? 'bg-success-50 text-success-700 border border-success-200'
-          : 'bg-danger-50 text-danger-700 border border-danger-200'
-          }`}>
-          {mensaje.texto}
-        </div>
-      )}
 
       {/* Error global */}
       {error && (

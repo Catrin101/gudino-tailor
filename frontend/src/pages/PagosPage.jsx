@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNotification } from '../shared/context/NotificationContext'
 import { usePagos } from '../features/pagos/hooks/usePagos'
 import { usePedidos } from '../features/pedidos/hooks/usePedidos'
 import { FormularioPago } from '../features/pagos/components/FormularioPago'
@@ -26,7 +27,9 @@ export function PagosPage() {
 
   const [vistaActual, setVistaActual] = useState('resumen') // 'resumen' | 'historial' | 'registrar'
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null)
-  const [mensaje, setMensaje] = useState(null)
+
+  const notification = useNotification()
+
   const [filtros, setFiltros] = useState({
     fechaInicio: new Date().toISOString().split('T')[0],
     fechaFin: new Date().toISOString().split('T')[0],
@@ -54,7 +57,7 @@ export function PagosPage() {
   const handleRegistrarPago = async (datoPago) => {
     try {
       await registrarPago(datoPago)
-      mostrarMensaje('Pago registrado correctamente')
+      notification.success('Pago registrado correctamente')
       setVistaActual('resumen')
       setPedidoSeleccionado(null)
       // Recargar datos
@@ -63,9 +66,9 @@ export function PagosPage() {
     } catch (err) {
       if (err.advertencias) {
         // Error de sobrepago
-        mostrarMensaje('Sobrepago detectado. Por favor confirma.', 'error')
+        notification.error('Sobrepago detectado. Por favor confirma.')
       } else {
-        mostrarMensaje(err.message, 'error')
+        notification.error(err.message)
       }
     }
   }
@@ -74,20 +77,20 @@ export function PagosPage() {
    * Buscar pedido para registrar pago
    */
   const handleBuscarPedido = (termino) => {
-    const numeropedido = parseInt(termino)
+    const numeroPedido = parseInt(termino)
     if (isNaN(numeroPedido)) {
-      mostrarMensaje('Ingresa un número de pedido válido', 'error')
+      notification.error('Ingresa un número de pedido válido')
       return
     }
 
     const pedido = pedidos.find(p => p.id_pedido === numeroPedido)
     if (!pedido) {
-      mostrarMensaje('Pedido no encontrado', 'error')
+      notification.error('Pedido no encontrado')
       return
     }
 
     if (pedido.saldo_pendiente <= 0) {
-      mostrarMensaje('Este pedido ya está completamente pagado', 'error')
+      notification.error('Este pedido ya está completamente pagado')
       return
     }
 
@@ -168,16 +171,6 @@ export function PagosPage() {
           </div>
         )}
       </div>
-
-      {/* Mensaje de notificación */}
-      {mensaje && (
-        <div className={`mb-6 p-4 rounded-lg ${mensaje.tipo === 'success'
-          ? 'bg-success-50 text-success-700 border border-success-200'
-          : 'bg-danger-50 text-danger-700 border border-danger-200'
-          }`}>
-          {mensaje.texto}
-        </div>
-      )}
 
       {/* Error global */}
       {error && (
@@ -475,20 +468,20 @@ export function PagosPage() {
                               Pedido #{pedido.id_pedido}
                             </span>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${pedido.tipo_servicio === 'Confeccion'
-                                ? 'bg-blue-100 text-blue-700'
-                                : pedido.tipo_servicio === 'Remiendo'
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-purple-100 text-purple-700'
+                              ? 'bg-blue-100 text-blue-700'
+                              : pedido.tipo_servicio === 'Remiendo'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-purple-100 text-purple-700'
                               }`}>
                               {pedido.tipo_servicio}
                             </span>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${pedido.estado === 'En Espera'
-                                ? 'bg-gray-100 text-gray-700'
-                                : pedido.estado === 'En Proceso'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : pedido.estado === 'Prueba'
-                                    ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-green-100 text-green-700'
+                              ? 'bg-gray-100 text-gray-700'
+                              : pedido.estado === 'En Proceso'
+                                ? 'bg-blue-100 text-blue-700'
+                                : pedido.estado === 'Prueba'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-green-100 text-green-700'
                               }`}>
                               {pedido.estado}
                             </span>
