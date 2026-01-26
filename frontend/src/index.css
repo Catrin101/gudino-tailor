@@ -4,32 +4,148 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    /* Fondo principal con gradiente sutil */
+    @apply bg-gradient-to-br from-canvas-primary to-canvas-secondary text-primary-900;
   }
-  
+
   button {
-    @apply min-h-[44px] px-4 rounded-lg font-medium transition-colors;
+    @apply min-h-[44px] px-4 rounded-lg font-medium transition-all;
+  }
+
+  /* Scrollbar personalizado para navegadores webkit */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-neutral-200;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-400 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-600;
   }
 }
 
 @layer components {
+
+  /* Botones con nueva paleta */
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
+    @apply bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 shadow-soft hover:shadow-card;
   }
-  
+
+  .btn-secondary {
+    @apply bg-accent-600 text-white hover:bg-accent-700 active:bg-accent-800 shadow-soft hover:shadow-card;
+  }
+
   .btn-success {
-    @apply bg-success-500 text-white hover:bg-success-600;
+    @apply bg-success-500 text-white hover:bg-success-600 shadow-soft hover:shadow-card;
   }
-  
+
   .btn-danger {
-    @apply bg-danger-500 text-white hover:bg-danger-600;
+    @apply bg-danger-500 text-white hover:bg-danger-600 shadow-soft hover:shadow-card;
   }
-  
+
+  /* Tarjetas con nueva paleta */
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-white rounded-xl shadow-card p-6 border border-neutral-200;
   }
-  
+
+  .card-secondary {
+    @apply bg-canvas-secondary rounded-xl shadow-soft p-6 border border-neutral-300;
+  }
+
+  /* Inputs con nueva paleta */
   .input {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg;
+    @apply w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-600 text-lg bg-white text-primary-900 placeholder:text-neutral-500;
   }
+
+  .input-error {
+    @apply border-danger-500 focus:ring-danger-500 focus:border-danger-600;
+  }
+
+  /* Badges con nueva paleta */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-primary {
+    @apply bg-primary-100 text-primary-800;
+  }
+
+  .badge-accent {
+    @apply bg-accent-100 text-accent-800;
+  }
+
+  .badge-success {
+    @apply bg-success-100 text-success-800;
+  }
+
+  .badge-warning {
+    @apply bg-warning-100 text-warning-800;
+  }
+
+  .badge-danger {
+    @apply bg-danger-100 text-danger-800;
+  }
+
+  .badge-neutral {
+    @apply bg-neutral-200 text-neutral-800;
+  }
+
+  /* Links con nueva paleta */
+  .link {
+    @apply text-primary-600 hover:text-primary-800 underline-offset-2 hover:underline transition-colors;
+  }
+
+  /* Tabla con nueva paleta */
+  .table-header {
+    @apply bg-neutral-100 border-b-2 border-neutral-300;
+  }
+
+  .table-row {
+    @apply border-b border-neutral-200 hover:bg-primary-50 transition-colors;
+  }
+}
+
+/* Animaciones personalizadas */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-duration: 300ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.slide-in-from-right {
+  animation-name: slide-in-right;
+}
+
+.zoom-in {
+  animation-name: zoom-in;
 }

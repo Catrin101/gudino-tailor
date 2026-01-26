@@ -11,12 +11,10 @@ import { useNotification } from '../shared/context/NotificationContext'
 export function Navbar({ onToggleSidebar, onSearch }) {
   const [terminoBusqueda, setTerminoBusqueda] = useState('')
 
-  // ← NUEVO: Agregar hooks
   const { logout, getUserData } = useAuth()
   const notification = useNotification()
   const userData = getUserData()
 
-  // ← NUEVO: Handler de logout
   const handleLogout = async () => {
     const confirmar = await notification.showConfirm({
       title: 'Cerrar Sesión',
@@ -36,10 +34,52 @@ export function Navbar({ onToggleSidebar, onSearch }) {
     }
   }
 
+  const handleBuscar = (e) => {
+    const valor = e.target.value
+    setTerminoBusqueda(valor)
+    if (onSearch) {
+      onSearch(valor)
+    }
+  }
+
   return (
     <nav className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40 h-16">
       <div className="h-full px-4 flex items-center justify-between gap-4">
-        {/* ... código existente ... */}
+        {/* Botón de menú hamburguesa (móvil) + Logo */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onToggleSidebar}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Abrir menú"
+          >
+            <Menu className="w-6 h-6 text-gray-700" />
+          </button>
+
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">GT</span>
+            </div>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold text-gray-900">GudiñoTailor</h1>
+              <p className="text-xs text-gray-500">Sistema de Sastrería</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Búsqueda global (oculta en móvil pequeño) */}
+        <div className="hidden md:flex flex-1 max-w-md">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={terminoBusqueda}
+              onChange={handleBuscar}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg
+                       focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
 
         {/* Acciones de usuario - ACTUALIZAR */}
         <div className="flex items-center gap-2">
