@@ -43,10 +43,10 @@ export function FormularioMedidas({
   const handleChange = (key, value) => {
     // Permitir solo números y punto decimal
     const valorLimpio = value.replace(/[^0-9.]/g, '')
-    
+
     // Evitar múltiples puntos decimales
     const partes = valorLimpio.split('.')
-    const valorFinal = partes.length > 2 
+    const valorFinal = partes.length > 2
       ? partes[0] + '.' + partes.slice(1).join('')
       : valorLimpio
 
@@ -77,7 +77,7 @@ export function FormularioMedidas({
         nuevosErrores[campo.key] = 'Requerido'
       } else {
         const numero = parseFloat(valor)
-        
+
         if (isNaN(numero) || numero <= 0) {
           nuevosErrores[campo.key] = 'Debe ser mayor a 0'
         } else if (numero > 300) {
@@ -185,7 +185,7 @@ export function FormularioMedidas({
           Medidas de {tipoMedida === TIPOS_MEDIDA.TORSO ? 'Torso' : 'Pantalón'}
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {campos.map(campo => {
             const diferencia = obtenerDiferencia(campo.key)
 
@@ -197,9 +197,8 @@ export function FormularioMedidas({
                     <span className="text-danger-500 ml-1">*</span>
                   </label>
                   {diferencia && (
-                    <span className={`text-xs font-medium ${
-                      diferencia.aumenta ? 'text-green-600' : 'text-blue-600'
-                    }`}>
+                    <span className={`text-xs font-medium ${diferencia.aumenta ? 'text-green-600' : 'text-blue-600'
+                      }`}>
                       {diferencia.aumenta ? '+' : '-'}{diferencia.diferencia} cm
                     </span>
                   )}

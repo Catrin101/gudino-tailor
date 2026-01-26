@@ -238,7 +238,7 @@ export function MedidasPage() {
       {vistaActual === 'historial' && clienteSeleccionado && (
         <div>
           {/* Info del cliente */}
-          <Card className="mb-6">
+          <Card className="mb-6 overflow-hidden">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -247,11 +247,11 @@ export function MedidasPage() {
                 <p className="text-gray-600">{clienteSeleccionado.telefono}</p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   variant="primary"
                   onClick={() => handleTomarMedidas(TIPOS_MEDIDA.TORSO)}
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   Medidas Torso
@@ -260,7 +260,7 @@ export function MedidasPage() {
                 <Button
                   variant="primary"
                   onClick={() => handleTomarMedidas(TIPOS_MEDIDA.PANTALON)}
-                  className="flex items-center gap-2"
+                  className="flex items-center justify-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
                   Medidas Pantalón
@@ -310,7 +310,7 @@ export function MedidasPage() {
                       </span>
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {medidasTipo.map(medida => (
                         <div key={medida.id_medida} className="relative">
                           <TarjetaMedida
