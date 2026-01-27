@@ -6,9 +6,9 @@ import { ESTADOS_PEDIDO, FLUJO_ESTADOS } from '../../../core/constants/estados'
  * Modal para ver detalles completos del pedido
  * Permite cambiar de estado
  */
-export function ModalDetallePedido({ 
-  pedido, 
-  onCerrar, 
+export function ModalDetallePedido({
+  pedido,
+  onCerrar,
   onCambiarEstado,
   onRegistrarPago,
   loading = false
@@ -68,26 +68,24 @@ export function ModalDetallePedido({
               Pedido #{pedido.id_pedido}
             </h2>
             <div className="flex items-center gap-3 mt-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                pedido.tipo_servicio === 'Confeccion'
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${pedido.tipo_servicio === 'Confeccion'
                   ? 'bg-blue-100 text-blue-700'
                   : pedido.tipo_servicio === 'Remiendo'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-purple-100 text-purple-700'
-              }`}>
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-purple-100 text-purple-700'
+                }`}>
                 {pedido.tipo_servicio}
               </span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                pedido.estado === 'En Espera'
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${pedido.estado === 'En Espera'
                   ? 'bg-gray-100 text-gray-700'
                   : pedido.estado === 'En Proceso'
-                  ? 'bg-blue-100 text-blue-700'
-                  : pedido.estado === 'Prueba'
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : pedido.estado === 'Terminado'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-success-100 text-success-700'
-              }`}>
+                    ? 'bg-blue-100 text-blue-700'
+                    : pedido.estado === 'Prueba'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : pedido.estado === 'Terminado'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-success-100 text-success-700'
+                }`}>
                 {pedido.estado}
               </span>
             </div>
@@ -149,10 +147,13 @@ export function ModalDetallePedido({
             </div>
           )}
 
-          {/* Detalles del pedido */}
+          {/* Prendas a elaborar */}
           {pedido.detalles_pedido && pedido.detalles_pedido.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-3">Detalles del Pedido</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Package className="w-5 h-5 text-gray-600" />
+                Prendas a Elaborar
+              </h3>
               <div className="space-y-2">
                 {pedido.detalles_pedido.map((detalle, idx) => (
                   <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
@@ -165,6 +166,19 @@ export function ModalDetallePedido({
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Notas adicionales */}
+          {pedido.descripcion && (
+            <div className="bg-amber-50 p-4 rounded-lg">
+              <div className="flex items-start gap-2">
+                <FileText className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-900 mb-1">Notas Adicionales</p>
+                  <p className="text-amber-800 whitespace-pre-wrap">{pedido.descripcion}</p>
+                </div>
               </div>
             </div>
           )}
@@ -190,11 +204,10 @@ export function ModalDetallePedido({
               <div className="border-t border-gray-300 pt-3">
                 <div className="flex justify-between text-xl">
                   <span className="font-semibold text-gray-900">Saldo Pendiente:</span>
-                  <span className={`font-bold ${
-                    pedido.saldo_pendiente > 0
+                  <span className={`font-bold ${pedido.saldo_pendiente > 0
                       ? 'text-warning-600'
                       : 'text-success-600'
-                  }`}>
+                    }`}>
                     ${parseFloat(pedido.saldo_pendiente).toFixed(2)}
                   </span>
                 </div>
@@ -205,8 +218,8 @@ export function ModalDetallePedido({
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
                     className="bg-success-500 h-3 rounded-full transition-all"
-                    style={{ 
-                      width: `${((pedido.costo_total - pedido.saldo_pendiente) / pedido.costo_total * 100)}%` 
+                    style={{
+                      width: `${((pedido.costo_total - pedido.saldo_pendiente) / pedido.costo_total * 100)}%`
                     }}
                   />
                 </div>
@@ -244,7 +257,7 @@ export function ModalDetallePedido({
                 <div className="text-sm text-danger-800">
                   <p className="font-semibold mb-1">⚠️ No se puede entregar</p>
                   <p>
-                    El cliente debe liquidar el saldo pendiente de ${pedido.saldo_pendiente.toFixed(2)} 
+                    El cliente debe liquidar el saldo pendiente de ${pedido.saldo_pendiente.toFixed(2)}
                     antes de poder marcar el pedido como entregado.
                   </p>
                 </div>
