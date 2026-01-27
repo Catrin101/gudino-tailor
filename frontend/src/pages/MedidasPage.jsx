@@ -9,7 +9,7 @@ import { ModalComparacion } from '../features/medidas/components/ModalComparacio
 import { Card } from '../shared/components/Card'
 import { Button } from '../shared/components/Button'
 import { TIPOS_MEDIDA } from '../core/constants/medidas'
-import { Ruler, User, Plus, GitCompare, Calendar } from 'lucide-react'
+import { Ruler, User, Plus, GitCompare, Calendar, Search } from 'lucide-react'
 import { MedidaService } from '../features/medidas/services/MedidaService'
 
 /**
@@ -36,6 +36,7 @@ export function MedidasPage() {
   const [mostrarComparacion, setMostrarComparacion] = useState(false)
   const [medidaComparar, setMedidaComparar] = useState(null)
   const [cambiosExtremos, setCambiosExtremos] = useState([])
+  const [busquedaCliente, setBusquedaCliente] = useState('')
 
   const notification = useNotification()
 
@@ -187,6 +188,13 @@ export function MedidasPage() {
     }
   }
 
+  /**
+   * Filtrar clientes por búsqueda
+   */
+  const clientesFiltrados = clientes.filter(cliente =>
+    cliente.nombre.toLowerCase().includes(busquedaCliente.toLowerCase())
+  )
+
   return (
     <div>
       {/* Header */}
@@ -218,17 +226,51 @@ export function MedidasPage() {
               </p>
             </div>
 
+            {/* Barra de búsqueda */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar cliente por nombre..."
+                  value={busquedaCliente}
+                  onChange={(e) => setBusquedaCliente(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                {busquedaCliente && (
+                  <button
+                    onClick={() => setBusquedaCliente('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {busquedaCliente && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {clientesFiltrados.length} cliente{clientesFiltrados.length !== 1 ? 's' : ''} encontrado{clientesFiltrados.length !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+
+            {/* Lista de clientes */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {clientes.map(cliente => (
-                <button
-                  key={cliente.id_cliente}
-                  onClick={() => handleSeleccionarCliente(cliente)}
-                  className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-primary-300 transition-colors"
-                >
-                  <p className="font-semibold text-gray-900">{cliente.nombre}</p>
-                  <p className="text-sm text-gray-500">{cliente.telefono}</p>
-                </button>
-              ))}
+              {clientesFiltrados.length > 0 ? (
+                clientesFiltrados.map(cliente => (
+                  <button
+                    key={cliente.id_cliente}
+                    onClick={() => handleSeleccionarCliente(cliente)}
+                    className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-primary-300 transition-colors"
+                  >
+                    <p className="font-semibold text-gray-900">{cliente.nombre}</p>
+                    <p className="text-sm text-gray-500">{cliente.telefono}</p>
+                  </button>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-gray-500">No se encontraron clientes con ese nombre</p>
+                </div>
+              )}
             </div>
           </Card>
         </div>
