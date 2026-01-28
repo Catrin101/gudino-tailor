@@ -1,8 +1,10 @@
 import { PedidoRepository } from './PedidoRepository'
 import { TIPOS_SERVICIO, ESTADOS_PEDIDO } from '../../../core/constants/estados'
 import { supabase } from '../../../core/config/supabase'
+
 /**
  * Servicio de lógica de negocio para pedidos
+ * CORRECCIÓN: Las notas/descripciones van en detalles_pedido, NO en la tabla pedidos
  */
 export class PedidoService {
   constructor() {
@@ -48,7 +50,7 @@ export class PedidoService {
       const fechaPromesa = new Date(pedido.fecha_promesa)
       const hoy = new Date()
       hoy.setHours(0, 0, 0, 0)
-      
+
       if (fechaPromesa < hoy) {
         errores.fecha_promesa = 'La fecha de entrega no puede ser en el pasado'
       }
@@ -59,7 +61,7 @@ export class PedidoService {
       if (!pedido.detalles || pedido.detalles.length === 0) {
         errores.detalles = 'Debe especificar al menos una prenda'
       }
-      
+
       // Verificar que cada detalle tenga medidas
       if (pedido.detalles) {
         pedido.detalles.forEach((detalle, idx) => {
@@ -71,6 +73,7 @@ export class PedidoService {
     }
 
     if (pedido.tipo_servicio === TIPOS_SERVICIO.REMIENDO) {
+      // Para remiendos, la descripción es obligatoria y va en detalles
       if (!pedido.descripcion || pedido.descripcion.trim() === '') {
         errores.descripcion = 'Debe especificar las instrucciones del remiendo'
       }
@@ -83,7 +86,7 @@ export class PedidoService {
       if (!pedido.fecha_devolucion) {
         errores.fecha_devolucion = 'La fecha de devolución es obligatoria'
       }
-      
+
       if (pedido.fecha_evento && pedido.fecha_devolucion) {
         if (new Date(pedido.fecha_devolucion) <= new Date(pedido.fecha_evento)) {
           errores.fecha_devolucion = 'La devolución debe ser posterior al evento'
@@ -99,6 +102,7 @@ export class PedidoService {
 
   /**
    * Crear pedido completo con detalles y pago inicial
+   * CORRECCIÓN: Manejo adecuado de notas adicionales en detalles_pedido
    * @param {Object} datosPedido
    * @returns {Promise<Object>}
    */
@@ -111,11 +115,11 @@ export class PedidoService {
 
     try {
       // 1. Generar UUID de grupo si aplica
-      const idGrupo = datosPedido.nombre_grupo 
-        ? crypto.randomUUID() 
+      const idGrupo = datosPedido.nombre_grupo
+        ? crypto.randomUUID()
         : null
 
-      // 2. Crear el pedido principal
+      // 2. Crear el pedido principal (SIN campo descripcion)
       const pedido = await this.repository.crear({
         id_cliente: datosPedido.id_cliente,
         tipo_servicio: datosPedido.tipo_servicio,
@@ -128,16 +132,50 @@ export class PedidoService {
       })
 
       // 3. Crear detalles según el tipo de servicio
-      if (datosPedido.detalles && datosPedido.detalles.length > 0) {
-        const detalles = datosPedido.detalles.map(detalle => ({
-          id_pedido: pedido.id_pedido,
-          id_medida: detalle.id_medida || null,
-          tipo_prenda: detalle.tipo_prenda,
-          descripcion: detalle.descripcion || null,
-          fecha_evento: datosPedido.fecha_evento || null,
-          fecha_devolucion: datosPedido.fecha_devolucion || null
-        }))
+      let detalles = []
 
+      if (datosPedido.tipo_servicio === TIPOS_SERVICIO.CONFECCION) {
+        // Para confección: múltiples detalles con medidas
+        detalles = datosPedido.detalles.map(detalle => ({
+          id_pedido: pedido.id_pedido,
+          id_medida: detalle.id_medida,
+          tipo_prenda: detalle.tipo_prenda,
+          descripcion: detalle.descripcion || datosPedido.notas || null // Notas de la prenda o generales
+        }))
+      } else if (datosPedido.tipo_servicio === TIPOS_SERVICIO.REMIENDO) {
+        // Para remiendo: UN detalle con las instrucciones
+        detalles = [{
+          id_pedido: pedido.id_pedido,
+          id_medida: null, // Remiendos no usan medidas
+          tipo_prenda: 'Remiendo',
+          descripcion: datosPedido.descripcion // Las instrucciones van aquí
+        }]
+      } else if (datosPedido.tipo_servicio === TIPOS_SERVICIO.RENTA) {
+        // Para renta: detalles con fechas y prendas
+        if (datosPedido.detalles && datosPedido.detalles.length > 0) {
+          detalles = datosPedido.detalles.map(detalle => ({
+            id_pedido: pedido.id_pedido,
+            id_medida: null, // Rentas no usan medidas
+            tipo_prenda: detalle.tipo_prenda,
+            descripcion: detalle.descripcion || datosPedido.notas || null,
+            fecha_evento: datosPedido.fecha_evento,
+            fecha_devolucion: datosPedido.fecha_devolucion
+          }))
+        } else {
+          // Si no se especificaron prendas, crear un detalle genérico
+          detalles = [{
+            id_pedido: pedido.id_pedido,
+            id_medida: null,
+            tipo_prenda: 'Renta',
+            descripcion: datosPedido.notas || null,
+            fecha_evento: datosPedido.fecha_evento,
+            fecha_devolucion: datosPedido.fecha_devolucion
+          }]
+        }
+      }
+
+      // Insertar detalles
+      if (detalles.length > 0) {
         await this.repository.crearDetalles(detalles)
       }
 
@@ -163,7 +201,7 @@ export class PedidoService {
         throw new Error(`Error al registrar pago inicial: ${errorPago.message}`)
       }
 
-      // 5. Retornar pedido completo
+      // 5. Retornar pedido completo con todas las relaciones
       return await this.repository.obtenerPorId(pedido.id_pedido)
     } catch (error) {
       throw new Error(`Error al crear pedido: ${error.message}`)
@@ -179,7 +217,7 @@ export class PedidoService {
   async actualizar(id, datosActualizados) {
     // Verificar que no esté entregado
     const pedido = await this.repository.obtenerPorId(id)
-    
+
     if (!pedido) {
       throw new Error('Pedido no encontrado')
     }

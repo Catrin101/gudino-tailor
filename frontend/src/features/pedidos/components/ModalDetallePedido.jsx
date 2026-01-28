@@ -4,7 +4,7 @@ import { ESTADOS_PEDIDO, FLUJO_ESTADOS, TIPOS_SERVICIO } from '../../../core/con
 
 /**
  * Modal para ver detalles completos del pedido
- * Muestra TODA la información capturada durante la creación
+ * CORRECCIÓN: Las notas se leen de detalles_pedido.descripcion, NO de pedido.descripcion
  */
 export function ModalDetallePedido({
   pedido,
@@ -68,6 +68,31 @@ export function ModalDetallePedido({
   }
 
   /**
+   * CORRECCIÓN: Obtener todas las descripciones/notas de los detalles
+   */
+  const obtenerNotasAdicionales = () => {
+    if (!pedido.detalles_pedido || pedido.detalles_pedido.length === 0) {
+      return null
+    }
+
+    // Para CONFECCIÓN: buscar descripciones en cada prenda
+    if (pedido.tipo_servicio === TIPOS_SERVICIO.CONFECCION) {
+      const notasPrendas = pedido.detalles_pedido
+        .filter(d => d.descripcion && d.descripcion.trim() !== '')
+        .map((d, idx) => ({
+          prenda: d.tipo_prenda,
+          nota: d.descripcion
+        }))
+
+      return notasPrendas.length > 0 ? notasPrendas : null
+    }
+
+    // Para REMIENDO y RENTA: la descripción está en el primer detalle
+    const primeraDescripcion = pedido.detalles_pedido.find(d => d.descripcion && d.descripcion.trim() !== '')
+    return primeraDescripcion ? primeraDescripcion.descripcion : null
+  }
+
+  /**
    * Renderizar contenido específico según tipo de servicio (PASO 3)
    */
   const renderContenidoTipoServicio = () => {
@@ -112,6 +137,9 @@ export function ModalDetallePedido({
 
     // REMIENDO: Mostrar instrucciones detalladas
     if (pedido.tipo_servicio === TIPOS_SERVICIO.REMIENDO) {
+      // CORRECCIÓN: Leer de detalles_pedido[0].descripcion
+      const instrucciones = pedido.detalles_pedido?.[0]?.descripcion
+
       return (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
@@ -119,16 +147,11 @@ export function ModalDetallePedido({
             <div className="flex-1">
               <h3 className="font-semibold text-green-900 mb-2">Instrucciones del Remiendo</h3>
 
-              {/* Mostrar descripción del detalle (donde van las instrucciones) */}
-              {pedido.detalles_pedido && pedido.detalles_pedido.length > 0 && pedido.detalles_pedido[0].descripcion ? (
+              {instrucciones ? (
                 <div className="bg-white border border-green-200 rounded-lg p-3">
                   <p className="text-gray-800 whitespace-pre-wrap">
-                    {pedido.detalles_pedido[0].descripcion}
+                    {instrucciones}
                   </p>
-                </div>
-              ) : pedido.descripcion ? (
-                <div className="bg-white border border-green-200 rounded-lg p-3">
-                  <p className="text-gray-800 whitespace-pre-wrap">{pedido.descripcion}</p>
                 </div>
               ) : (
                 <p className="text-sm text-green-700 italic">No hay instrucciones específicas registradas</p>
@@ -221,6 +244,9 @@ export function ModalDetallePedido({
     return null
   }
 
+  // CORRECCIÓN: Obtener notas adicionales de los detalles
+  const notasAdicionales = obtenerNotasAdicionales()
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -232,22 +258,22 @@ export function ModalDetallePedido({
             </h2>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${pedido.tipo_servicio === 'Confeccion'
-                  ? 'bg-blue-100 text-blue-700'
-                  : pedido.tipo_servicio === 'Remiendo'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-purple-100 text-purple-700'
+                ? 'bg-blue-100 text-blue-700'
+                : pedido.tipo_servicio === 'Remiendo'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-purple-100 text-purple-700'
                 }`}>
                 {pedido.tipo_servicio}
               </span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${pedido.estado === 'En Espera'
-                  ? 'bg-gray-100 text-gray-700'
-                  : pedido.estado === 'En Proceso'
-                    ? 'bg-blue-100 text-blue-700'
-                    : pedido.estado === 'Prueba'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : pedido.estado === 'Terminado'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-success-100 text-success-700'
+                ? 'bg-gray-100 text-gray-700'
+                : pedido.estado === 'En Proceso'
+                  ? 'bg-blue-100 text-blue-700'
+                  : pedido.estado === 'Prueba'
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : pedido.estado === 'Terminado'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-success-100 text-success-700'
                 }`}>
                 {pedido.estado}
               </span>
@@ -314,14 +340,34 @@ export function ModalDetallePedido({
           {renderContenidoTipoServicio()}
 
           {/* ========== SECCIÓN PASO 4: NOTAS ADICIONALES DEL PEDIDO ========== */}
-          {pedido.descripcion && pedido.tipo_servicio !== TIPOS_SERVICIO.REMIENDO && (
+          {/* CORRECCIÓN: Mostrar notas de detalles_pedido según el tipo de servicio */}
+          {pedido.tipo_servicio === TIPOS_SERVICIO.CONFECCION && notasAdicionales && Array.isArray(notasAdicionales) && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-amber-900 mb-2">Notas Adicionales del Pedido</p>
+                  <p className="text-sm font-semibold text-amber-900 mb-2">Notas de las Prendas</p>
+                  <div className="space-y-2">
+                    {notasAdicionales.map((item, idx) => (
+                      <div key={idx} className="bg-white border border-amber-200 rounded-lg p-3">
+                        <p className="text-xs font-medium text-amber-700 mb-1">{item.prenda}</p>
+                        <p className="text-sm text-gray-800">{item.nota}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {pedido.tipo_servicio === TIPOS_SERVICIO.RENTA && notasAdicionales && typeof notasAdicionales === 'string' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <FileText className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-amber-900 mb-2">Notas Adicionales</p>
                   <div className="bg-white border border-amber-200 rounded-lg p-3">
-                    <p className="text-gray-800 whitespace-pre-wrap">{pedido.descripcion}</p>
+                    <p className="text-gray-800 whitespace-pre-wrap">{notasAdicionales}</p>
                   </div>
                 </div>
               </div>
@@ -350,8 +396,8 @@ export function ModalDetallePedido({
                 <div className="flex justify-between text-xl">
                   <span className="font-semibold text-gray-900">Saldo Pendiente:</span>
                   <span className={`font-bold ${pedido.saldo_pendiente > 0
-                      ? 'text-warning-600'
-                      : 'text-success-600'
+                    ? 'text-warning-600'
+                    : 'text-success-600'
                     }`}>
                     ${parseFloat(pedido.saldo_pendiente).toFixed(2)}
                   </span>
