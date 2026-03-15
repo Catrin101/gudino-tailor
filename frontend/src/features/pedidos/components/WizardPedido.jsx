@@ -5,27 +5,35 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Paso1SeleccionCliente } from './wizard/Paso1SeleccionCliente'
 import { Paso2TipoServicio } from './wizard/Paso2TipoServicio'
 import { Paso3Medidas } from './wizard/Paso3Medidas'
-import { Paso3Remiendo } from './wizard/Paso3Remiendo'
+import { Paso3Compostura } from './wizard/Paso3Compostura'   // CAMBIO: importar nuevo componente
 import { Paso3Renta } from './wizard/Paso3Renta'
 import { Paso4Detalles } from './wizard/Paso4Detalles'
 import { Paso5Pago } from './wizard/Paso5Pago'
-import { TIPOS_SERVICIO } from '../../../core/constants/estados'
+import { TIPOS_SERVICIO, ETIQUETAS_TIPO_SERVICIO } from '../../../core/constants/estados'
 
 /**
  * Wizard para crear pedidos paso a paso
- * Maneja la navegación entre pasos y el estado global del formulario
+ *
+ * CAMBIOS:
+ * 1. Paso3Remiendo → Paso3Compostura (múltiples prendas con instrucciones)
+ * 2. Estado 'descripcion_remiendo' (string) → 'prendas_compostura' (array)
+ * 3. Validación del paso 3 actualizada para compostura
+ * 4. handleFinalizar genera detalles correctos para compostura
  */
 export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
   const [pasoActual, setPasoActual] = useState(1)
+
   const [datosPedido, setDatosPedido] = useState({
     // Paso 1
     cliente: null,
     // Paso 2
     tipo_servicio: null,
-    // Paso 3 (varía según tipo)
+    // Paso 3 — Confección
     medidas_torso: null,
     medidas_pantalon: null,
-    descripcion_remiendo: '',
+    // Paso 3 — Compostura (CAMBIO: ahora es un array de { tipo, descripcion })
+    prendas_compostura: [],
+    // Paso 3 — Renta
     fecha_evento: '',
     fecha_devolucion: '',
     // Paso 4
@@ -47,84 +55,80 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
     { numero: 5, titulo: 'Pago', descripcion: 'Cotización y anticipo' }
   ]
 
-  /**
-   * Actualizar datos del pedido
-   */
+  // ─── Actualizar estado global del wizard ─────────────────────────────
   const actualizarDatos = (nuevosDatos) => {
     setDatosPedido(prev => ({ ...prev, ...nuevosDatos }))
   }
 
-  /**
-   * Avanzar al siguiente paso
-   */
-  const siguientePaso = () => {
-    if (pasoActual < 5) {
-      setPasoActual(prev => prev + 1)
-    }
-  }
+  const siguientePaso = () => { if (pasoActual < 5) setPasoActual(p => p + 1) }
+  const pasoAnterior = () => { if (pasoActual > 1) setPasoActual(p => p - 1) }
 
-  /**
-   * Retroceder al paso anterior
-   */
-  const pasoAnterior = () => {
-    if (pasoActual > 1) {
-      setPasoActual(prev => prev - 1)
-    }
-  }
-
-  /**
-   * Validar paso actual antes de avanzar
-   */
+  // ─── Validaciones por paso ────────────────────────────────────────────
   const validarPasoActual = () => {
     switch (pasoActual) {
       case 1:
         return datosPedido.cliente !== null
+
       case 2:
         return datosPedido.tipo_servicio !== null
+
       case 3:
         if (datosPedido.tipo_servicio === TIPOS_SERVICIO.CONFECCION) {
           return datosPedido.medidas_torso || datosPedido.medidas_pantalon
         }
-        if (datosPedido.tipo_servicio === TIPOS_SERVICIO.REMIENDO) {
-          return datosPedido.descripcion_remiendo.trim() !== ''
+        // CAMBIO: Compostura requiere al menos 1 prenda con instrucciones
+        if (datosPedido.tipo_servicio === TIPOS_SERVICIO.COMPOSTURA) {
+          return datosPedido.prendas_compostura.length > 0
         }
         if (datosPedido.tipo_servicio === TIPOS_SERVICIO.RENTA) {
           return datosPedido.fecha_evento && datosPedido.fecha_devolucion
         }
         return true
+
       case 4:
         if (datosPedido.tipo_servicio === TIPOS_SERVICIO.CONFECCION) {
           return datosPedido.prendas.length > 0 && datosPedido.fecha_promesa
         }
-        return datosPedido.fecha_promesa
+        return !!datosPedido.fecha_promesa
+
       case 5:
-        return datosPedido.costo_total > 0 && datosPedido.anticipo > 0
+        return (
+          parseFloat(datosPedido.costo_total) > 0 &&
+          parseFloat(datosPedido.anticipo) > 0
+        )
+
       default:
         return true
     }
   }
 
-  /**
-   * Manejar clic en siguiente
-   */
   const handleSiguiente = () => {
     if (validarPasoActual()) {
       siguientePaso()
     } else {
-      alert('Por favor completa todos los campos requeridos')
+      // Mensajes específicos según el paso y tipo de servicio
+      const mensajes = {
+        1: 'Selecciona un cliente para continuar.',
+        2: 'Selecciona el tipo de servicio para continuar.',
+        3: datosPedido.tipo_servicio === TIPOS_SERVICIO.COMPOSTURA
+          ? 'Agrega al menos una prenda con sus instrucciones antes de continuar.'
+          : datosPedido.tipo_servicio === TIPOS_SERVICIO.RENTA
+            ? 'Selecciona la fecha del evento y la fecha de devolución.'
+            : 'Selecciona al menos un tipo de medidas para continuar.',
+        4: 'Completa todos los campos requeridos (prendas y fecha de entrega).',
+        5: 'Ingresa el costo total y el anticipo para finalizar.'
+      }
+      alert(mensajes[pasoActual] || 'Por favor completa todos los campos requeridos.')
     }
   }
 
-  /**
-   * Finalizar y guardar
-   */
+  // ─── Construir y enviar el pedido final ──────────────────────────────
   const handleFinalizar = () => {
     if (!validarPasoActual()) {
-      alert('Por favor completa todos los campos requeridos')
+      alert('Ingresa el costo total y el anticipo para finalizar.')
       return
     }
 
-    // Preparar datos para enviar
     const pedidoFinal = {
       id_cliente: datosPedido.cliente.id_cliente,
       tipo_servicio: datosPedido.tipo_servicio,
@@ -134,41 +138,60 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
       fecha_promesa: datosPedido.fecha_promesa,
       metodo_pago: datosPedido.metodo_pago,
       detalles: [],
-      descripcion: datosPedido.notas
+      notas: datosPedido.notas || null
     }
 
-    // Agregar datos específicos según tipo de servicio
+    // ── Detalles según tipo de servicio ──────────────────────────────
     if (datosPedido.tipo_servicio === TIPOS_SERVICIO.CONFECCION) {
       pedidoFinal.detalles = datosPedido.prendas.map(prenda => ({
         tipo_prenda: prenda.tipo,
         id_medida: prenda.id_medida,
-        descripcion: prenda.descripcion
+        descripcion: prenda.descripcion || null
       }))
     }
 
-    if (datosPedido.tipo_servicio === TIPOS_SERVICIO.REMIENDO) {
-      pedidoFinal.descripcion = datosPedido.descripcion_remiendo
-      pedidoFinal.detalles = [{
-        tipo_prenda: 'Remiendo',
-        descripcion: datosPedido.descripcion_remiendo
-      }]
+    /**
+     * CAMBIO: Compostura ahora genera UN detalle por cada prenda,
+     * igual que Confección, en lugar de un único detalle global.
+     * Cada detalle tiene:
+     *   - tipo_prenda: el tipo seleccionado (Saco, Pantalón, etc.)
+     *   - descripcion: las instrucciones específicas de esa prenda
+     *   - id_medida:   null (composturas no requieren medidas)
+     */
+    if (datosPedido.tipo_servicio === TIPOS_SERVICIO.COMPOSTURA) {
+      pedidoFinal.detalles = datosPedido.prendas_compostura.map(prenda => ({
+        tipo_prenda: prenda.tipo,
+        id_medida: null,
+        descripcion: prenda.descripcion
+      }))
+      // Descripcion global (para compatibilidad con validación del servicio)
+      pedidoFinal.descripcion = datosPedido.prendas_compostura
+        .map(p => `${p.tipo}: ${p.descripcion}`)
+        .join('\n')
     }
 
     if (datosPedido.tipo_servicio === TIPOS_SERVICIO.RENTA) {
       pedidoFinal.fecha_evento = datosPedido.fecha_evento
       pedidoFinal.fecha_devolucion = datosPedido.fecha_devolucion
-      pedidoFinal.detalles = datosPedido.prendas.map(prenda => ({
-        tipo_prenda: prenda.tipo,
-        descripcion: prenda.descripcion
-      }))
+      pedidoFinal.detalles = datosPedido.prendas.length > 0
+        ? datosPedido.prendas.map(prenda => ({
+          tipo_prenda: prenda.tipo,
+          descripcion: prenda.descripcion || null,
+          fecha_evento: datosPedido.fecha_evento,
+          fecha_devolucion: datosPedido.fecha_devolucion
+        }))
+        : [{
+          tipo_prenda: 'Renta',
+          descripcion: datosPedido.notas || null,
+          fecha_evento: datosPedido.fecha_evento,
+          fecha_devolucion: datosPedido.fecha_devolucion
+        }]
     }
 
     onGuardar(pedidoFinal)
   }
 
-  /**
-   * Renderizar paso actual
-   */
+  // ─── Renderizar paso actual ───────────────────────────────────────────
   const renderPaso = () => {
     switch (pasoActual) {
       case 1:
@@ -178,7 +201,7 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
             onSeleccionar={(cliente) => actualizarDatos({ cliente })}
           />
         )
-      
+
       case 2:
         return (
           <Paso2TipoServicio
@@ -186,7 +209,7 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
             onSeleccionar={(tipo) => actualizarDatos({ tipo_servicio: tipo })}
           />
         )
-      
+
       case 3:
         if (datosPedido.tipo_servicio === TIPOS_SERVICIO.CONFECCION) {
           return (
@@ -198,11 +221,12 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
             />
           )
         }
-        if (datosPedido.tipo_servicio === TIPOS_SERVICIO.REMIENDO) {
+        // CAMBIO: Compostura usa el nuevo componente con lista de prendas
+        if (datosPedido.tipo_servicio === TIPOS_SERVICIO.COMPOSTURA) {
           return (
-            <Paso3Remiendo
-              descripcion={datosPedido.descripcion_remiendo}
-              onActualizar={(desc) => actualizarDatos({ descripcion_remiendo: desc })}
+            <Paso3Compostura
+              prendasCompostura={datosPedido.prendas_compostura}
+              onActualizar={(prendas) => actualizarDatos({ prendas_compostura: prendas })}
             />
           )
         }
@@ -216,7 +240,7 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
           )
         }
         return null
-      
+
       case 4:
         return (
           <Paso4Detalles
@@ -230,7 +254,7 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
             onActualizar={actualizarDatos}
           />
         )
-      
+
       case 5:
         return (
           <Paso5Pago
@@ -240,7 +264,7 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
             onActualizar={actualizarDatos}
           />
         )
-      
+
       default:
         return null
     }
@@ -248,23 +272,21 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Indicador de progreso */}
+      {/* ── Indicador de progreso ────────────────────────────────────── */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           {pasos.map((paso, index) => (
             <div key={paso.numero} className="flex items-center flex-1">
-              {/* Círculo del paso */}
               <div className="relative flex flex-col items-center">
                 <div
                   className={`
-                    w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg
-                    transition-colors
+                    w-12 h-12 rounded-full flex items-center justify-center
+                    font-bold text-lg transition-colors
                     ${pasoActual === paso.numero
                       ? 'bg-primary-600 text-white'
                       : pasoActual > paso.numero
-                      ? 'bg-success-500 text-white'
-                      : 'bg-gray-200 text-gray-500'
-                    }
+                        ? 'bg-success-500 text-white'
+                        : 'bg-gray-200 text-gray-500'}
                   `}
                 >
                   {pasoActual > paso.numero ? '✓' : paso.numero}
@@ -275,7 +297,6 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
                 </div>
               </div>
 
-              {/* Línea conectora */}
               {index < pasos.length - 1 && (
                 <div
                   className={`
@@ -289,12 +310,12 @@ export function WizardPedido({ onGuardar, onCancelar, loading = false }) {
         </div>
       </div>
 
-      {/* Contenido del paso */}
+      {/* ── Contenido del paso ───────────────────────────────────────── */}
       <Card className="mb-6">
         {renderPaso()}
       </Card>
 
-      {/* Botones de navegación */}
+      {/* ── Botones de navegación ────────────────────────────────────── */}
       <div className="flex justify-between">
         <Button
           variant="outline"

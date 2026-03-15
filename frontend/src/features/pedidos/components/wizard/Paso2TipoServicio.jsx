@@ -1,30 +1,31 @@
 import { Package, Scissors, Calendar } from 'lucide-react'
-import { TIPOS_SERVICIO } from '../../../../core/constants/estados'
+import { TIPOS_SERVICIO, ETIQUETAS_TIPO_SERVICIO } from '../../../../core/constants/estados'
 
 /**
  * Paso 2: Selección de tipo de servicio
+ * CAMBIO: "Remiendo" renombrado a "Compostura" en etiquetas y descripciones de UI
  */
 export function Paso2TipoServicio({ tipoSeleccionado, onSeleccionar }) {
   const servicios = [
     {
       tipo: TIPOS_SERVICIO.CONFECCION,
-      titulo: 'Confección',
+      titulo: ETIQUETAS_TIPO_SERVICIO[TIPOS_SERVICIO.CONFECCION],
       descripcion: 'Crear prendas nuevas desde cero',
       icon: Package,
       color: 'blue',
       detalles: ['Requiere medidas', 'Tiempo: 2-4 semanas', 'Incluye pruebas']
     },
     {
-      tipo: TIPOS_SERVICIO.REMIENDO,
-      titulo: 'Remiendo',
+      tipo: TIPOS_SERVICIO.COMPOSTURA,
+      titulo: ETIQUETAS_TIPO_SERVICIO[TIPOS_SERVICIO.COMPOSTURA], // 'Compostura'
       descripcion: 'Ajustes y reparaciones de prendas',
       icon: Scissors,
       color: 'green',
-      detalles: ['No requiere medidas', 'Tiempo: 1-3 días', 'Trabajo rápido']
+      detalles: ['No requiere medidas', 'Tiempo: 1-3 días', 'Varias prendas por pedido']
     },
     {
       tipo: TIPOS_SERVICIO.RENTA,
-      titulo: 'Renta',
+      titulo: ETIQUETAS_TIPO_SERVICIO[TIPOS_SERVICIO.RENTA],
       descripcion: 'Préstamo de prendas para eventos',
       icon: Calendar,
       color: 'purple',
@@ -34,27 +35,18 @@ export function Paso2TipoServicio({ tipoSeleccionado, onSeleccionar }) {
 
   const getColorClasses = (color, seleccionado) => {
     const colores = {
-      blue: seleccionado 
-        ? 'border-blue-500 bg-blue-50' 
-        : 'border-gray-200 hover:border-blue-300',
-      green: seleccionado
-        ? 'border-green-500 bg-green-50'
-        : 'border-gray-200 hover:border-green-300',
-      purple: seleccionado
-        ? 'border-purple-500 bg-purple-50'
-        : 'border-gray-200 hover:border-purple-300'
+      blue: seleccionado ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300',
+      green: seleccionado ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300',
+      purple: seleccionado ? 'border-purple-500 bg-purple-50' : 'border-gray-200 hover:border-purple-300'
     }
     return colores[color]
   }
 
-  const getIconColor = (color) => {
-    const colores = {
-      blue: 'text-blue-600',
-      green: 'text-green-600',
-      purple: 'text-purple-600'
-    }
-    return colores[color]
-  }
+  const getIconColor = (color) => ({
+    blue: 'text-blue-600',
+    green: 'text-green-600',
+    purple: 'text-purple-600'
+  }[color])
 
   return (
     <div className="p-6">
@@ -95,7 +87,7 @@ export function Paso2TipoServicio({ tipoSeleccionado, onSeleccionar }) {
               <ul className="space-y-1">
                 {servicio.detalles.map((detalle, idx) => (
                   <li key={idx} className="text-xs text-gray-500 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full flex-shrink-0" />
                     {detalle}
                   </li>
                 ))}
