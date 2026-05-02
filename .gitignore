@@ -1,0 +1,7 @@
+# Agentes y configuración de desarrollo
+.agents/
+AGENT.md
+skills-lock.json
+
+# Documentación
+docs/

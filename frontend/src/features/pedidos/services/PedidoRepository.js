@@ -18,6 +18,12 @@ export class PedidoRepository {
           id_cliente,
           nombre,
           telefono
+        ),
+        detalles_pedido (
+          *,
+          medidas (
+            *
+          )
         )
       `)
       .order('fecha_creacion', { ascending: false })
