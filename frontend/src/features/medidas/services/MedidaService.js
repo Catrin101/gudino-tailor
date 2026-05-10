@@ -1,5 +1,5 @@
 import { MedidaRepository } from './MedidaRepository'
-import { TOLERANCIA_AJUSTE } from '../../../core/constants/medidas'
+import { TOLERANCIA_AJUSTE } from '../../../utils/medidas.config'
 
 /**
  * Servicio de lógica de negocio para medidas
@@ -26,16 +26,25 @@ export class MedidaService {
       }
     }
 
-    // Validar que todos los valores sean números positivos
     Object.entries(valores).forEach(([campo, valor]) => {
       const numero = parseFloat(valor)
+      const esEntero = campo === 'numero_calzado'
 
-      if (isNaN(numero) || numero <= 0) {
-        errores[campo] = 'Debe ser un número positivo'
-      } else if (numero > 300) {
-        errores[campo] = 'Valor demasiado grande (máximo 300 cm)'
-      } else if (!/^\d+(\.\d{1,2})?$/.test(valor.toString())) {
-        errores[campo] = 'Máximo 2 decimales permitidos'
+      if (esEntero) {
+        const num = parseInt(valor)
+        if (isNaN(num) || num <= 0) {
+          errores[campo] = 'Debe ser un número positivo'
+        } else if (num > 50) {
+          errores[campo] = 'Valor demasiado grande (máximo 50)'
+        }
+      } else {
+        if (isNaN(numero) || numero <= 0) {
+          errores[campo] = 'Debe ser un número positivo'
+        } else if (numero > 300) {
+          errores[campo] = 'Valor demasiado grande (máximo 300 cm)'
+        } else if (!/^\d+(\.\d{1,2})?$/.test(valor.toString())) {
+          errores[campo] = 'Máximo 2 decimales permitidos'
+        }
       }
     })
 

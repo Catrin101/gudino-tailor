@@ -1,17 +1,23 @@
-import { X, Calendar, Tag, Edit, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { X, Calendar, Tag, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '../../../shared/components/Button'
+import { CAMPOS_TORSO, CAMPOS_PANTALON } from '../../../utils/medidas.config'
 
-/**
- * Modal para ver detalles completos de una medida
- * Muestra todos los valores y permite editar/eliminar
- */
-export function ModalDetallesMedida({
+const getCamposConfig = (tipo) => tipo === 'Torso' ? CAMPOS_TORSO : CAMPOS_PANTALON
+
+function ModalDetallesMedida({
     medida,
     onCerrar,
     onEditar,
     onEliminar,
     puedeEditar = true
 }) {
+    const [mostrarLegacy, setMostrarLegacy] = useState(false)
+    const camposConfig = getCamposConfig(medida.tipo_medida)
+    const keysConfig = new Set(camposConfig.map(c => c.key))
+    const camposActuales = camposConfig.filter(c => medida.valores[c.key] !== undefined)
+    const camposLegacy = Object.keys(medida.valores).filter(k => !keysConfig.has(k))
+
     const formatearFecha = (fecha) => {
         if (!fecha) return 'Sin fecha'
         return new Date(fecha).toLocaleDateString('es-MX', {
@@ -26,7 +32,6 @@ export function ModalDetallesMedida({
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">
@@ -44,9 +49,7 @@ export function ModalDetallesMedida({
                     </button>
                 </div>
 
-                {/* Contenido */}
                 <div className="p-6 space-y-6">
-                    {/* Información general */}
                     <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                         {medida.etiqueta && (
                             <div className="flex items-center gap-2">
@@ -69,42 +72,77 @@ export function ModalDetallesMedida({
                         </div>
                     </div>
 
-                    {/* Valores de medidas */}
                     <div>
                         <h3 className="text-lg font-semibold mb-4">
                             Medidas de {medida.tipo_medida}
                         </h3>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {Object.entries(medida.valores).map(([campo, valor]) => (
+                            {camposActuales.map(({ key, label }) => {
+                              const valor = medida.valores[key]
+                              const esEntero = key === 'numero_calzado'
+                              return (
                                 <div
-                                    key={campo}
+                                    key={key}
                                     className="bg-white border border-gray-200 rounded-lg p-4"
                                 >
-                                    <p className="text-sm text-gray-500 capitalize mb-1">
-                                        {campo.replace(/_/g, ' ')}
+                                    <p className="text-sm text-gray-500 mb-1">
+                                        {label}
                                     </p>
                                     <p className="text-2xl font-bold text-gray-900">
                                         {valor}
-                                        <span className="text-sm text-gray-500 ml-1">cm</span>
+                                        {!esEntero && <span className="text-sm text-gray-500 ml-1">cm</span>}
                                     </p>
                                 </div>
-                            ))}
+                              )
+                            })}
                         </div>
+
+                        {camposLegacy.length > 0 && (
+                          <div className="mt-4">
+                            <button
+                              onClick={() => setMostrarLegacy(!mostrarLegacy)}
+                              className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
+                            >
+                              {mostrarLegacy ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                              Campos anteriores ({camposLegacy.length})
+                            </button>
+                            {mostrarLegacy && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                                {camposLegacy.map(campo => {
+                                  const label = campo.replace(/_/g, ' ')
+                                  const valor = medida.valores[campo]
+                                  return (
+                                    <div
+                                        key={campo}
+                                        className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                                    >
+                                        <p className="text-sm text-gray-500 mb-1 capitalize">
+                                            {label}
+                                        </p>
+                                        <p className="text-xl font-bold text-gray-700">
+                                            {valor}
+                                            <span className="text-sm text-gray-400 ml-1">cm</span>
+                                        </p>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
                     </div>
 
-                    {/* Alerta si está obsoleta */}
                     {!medida.activo && (
                         <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
                             <p className="text-warning-800 text-sm">
-                                ⚠️ Esta medida ha sido marcada como obsoleta.
-                                Existe una versión más reciente de estas medidas.
+                                Esta medida ha sido marcada como obsoleta.
+                                Existe una version mas reciente de estas medidas.
                             </p>
                         </div>
                     )}
                 </div>
 
-                {/* Footer con acciones */}
                 {puedeEditar && medida.activo && (
                     <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 flex gap-3">
                         <Button
@@ -130,3 +168,6 @@ export function ModalDetallesMedida({
         </div>
     )
 }
+
+export { ModalDetallesMedida }
+export default ModalDetallesMedida

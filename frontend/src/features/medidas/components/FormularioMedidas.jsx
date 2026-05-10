@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Button } from '../../../shared/components/Button'
 import { Input } from '../../../shared/components/Input'
-import { TIPOS_MEDIDA, CAMPOS_MEDIDAS } from '../../../core/constants/medidas'
+import { TIPOS_MEDIDA } from '../../../core/constants/medidas'
+import { CAMPOS_TORSO, CAMPOS_PANTALON } from '../../../utils/medidas.config'
 import { AlertCircle } from 'lucide-react'
+
+const getCamposConfig = (tipoMedida) =>
+  tipoMedida === TIPOS_MEDIDA.TORSO ? CAMPOS_TORSO : CAMPOS_PANTALON
 
 /**
  * Formulario para tomar medidas (Torso y Pantalón)
@@ -20,7 +24,7 @@ export function FormularioMedidas({
   const [errores, setErrores] = useState({})
   const [etiqueta, setEtiqueta] = useState('')
 
-  const campos = CAMPOS_MEDIDAS[tipoMedida] || []
+  const campos = getCamposConfig(tipoMedida)
 
   // Inicializar con medidas anteriores si existen
   useEffect(() => {
@@ -41,26 +45,23 @@ export function FormularioMedidas({
    * Manejar cambio en inputs
    */
   const handleChange = (key, value) => {
-    // Permitir solo números y punto decimal
-    const valorLimpio = value.replace(/[^0-9.]/g, '')
+    const campo = campos.find(c => c.key === key)
+    const esEntero = campo?.tipo === 'entero'
 
-    // Evitar múltiples puntos decimales
-    const partes = valorLimpio.split('.')
-    const valorFinal = partes.length > 2
-      ? partes[0] + '.' + partes.slice(1).join('')
-      : valorLimpio
+    if (esEntero) {
+      const valorLimpio = value.replace(/[^0-9]/g, '')
+      setValores(prev => ({ ...prev, [key]: valorLimpio }))
+    } else {
+      const valorLimpio = value.replace(/[^0-9.]/g, '')
+      const partes = valorLimpio.split('.')
+      const valorFinal = partes.length > 2
+        ? partes[0] + '.' + partes.slice(1).join('')
+        : valorLimpio
+      setValores(prev => ({ ...prev, [key]: valorFinal }))
+    }
 
-    setValores(prev => ({
-      ...prev,
-      [key]: valorFinal
-    }))
-
-    // Limpiar error del campo
     if (errores[key]) {
-      setErrores(prev => ({
-        ...prev,
-        [key]: null
-      }))
+      setErrores(prev => ({ ...prev, [key]: null }))
     }
   }
 
@@ -72,18 +73,27 @@ export function FormularioMedidas({
 
     campos.forEach(campo => {
       const valor = valores[campo.key]
+      const esEntero = campo.tipo === 'entero'
 
       if (!valor || valor.trim() === '') {
         nuevosErrores[campo.key] = 'Requerido'
       } else {
-        const numero = parseFloat(valor)
-
-        if (isNaN(numero) || numero <= 0) {
-          nuevosErrores[campo.key] = 'Debe ser mayor a 0'
-        } else if (numero > 300) {
-          nuevosErrores[campo.key] = 'Máximo 300 cm'
-        } else if (!/^\d+(\.\d{1,2})?$/.test(valor)) {
-          nuevosErrores[campo.key] = 'Máx. 2 decimales'
+        if (esEntero) {
+          const num = parseInt(valor)
+          if (isNaN(num) || num <= 0) {
+            nuevosErrores[campo.key] = 'Debe ser un número positivo'
+          } else if (num > 50) {
+            nuevosErrores[campo.key] = 'Máximo 50'
+          }
+        } else {
+          const numero = parseFloat(valor)
+          if (isNaN(numero) || numero <= 0) {
+            nuevosErrores[campo.key] = 'Debe ser mayor a 0'
+          } else if (numero > 300) {
+            nuevosErrores[campo.key] = 'Máximo 300 cm'
+          } else if (!/^\d+(\.\d{1,2})?$/.test(valor)) {
+            nuevosErrores[campo.key] = 'Máx. 2 decimales'
+          }
         }
       }
     })
@@ -206,21 +216,24 @@ export function FormularioMedidas({
 
                 <div className="relative">
                   <input
-                    type="text"
-                    inputMode="decimal"
+                    type="number"
+                    inputMode={campo.tipo === 'entero' ? 'numeric' : 'decimal'}
+                    step={campo.tipo === 'entero' ? '1' : '0.5'}
+                    min={campo.tipo === 'entero' ? '1' : '0'}
                     value={valores[campo.key] || ''}
                     onChange={(e) => handleChange(campo.key, e.target.value)}
-                    placeholder="0.0"
+                    placeholder={campo.tipo === 'entero' ? '0' : '0.0'}
                     disabled={loading}
                     className={`
                       w-full px-4 py-3 pr-12 border rounded-lg text-lg
                       focus:ring-2 focus:ring-primary-500 focus:border-transparent
                       ${errores[campo.key] ? 'border-danger-500' : 'border-gray-300'}
                       ${loading ? 'bg-gray-100 cursor-not-allowed' : ''}
-                    `}
+                    `
+                    }
                   />
                   <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    {campo.unidad}
+                    {campo.tipo === 'entero' ? '' : 'cm'}
                   </span>
                 </div>
 

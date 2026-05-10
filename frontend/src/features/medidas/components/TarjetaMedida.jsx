@@ -1,5 +1,6 @@
 import { Calendar, Tag, User, AlertCircle, CheckCircle } from 'lucide-react'
 import { Card } from '../../../shared/components/Card'
+import { CAMPOS_TORSO, CAMPOS_PANTALON } from '../../../utils/medidas.config'
 
 /**
  * Tarjeta individual de medida
@@ -20,11 +21,12 @@ export function TarjetaMedida({ medida, onClick, mostrarCliente = false }) {
     const obtenerResumenValores = (valores) => {
         if (!valores) return []
 
-        // Mostrar los primeros 3 campos
-        return Object.entries(valores).slice(0, 3).map(([key, value]) => ({
-            campo: key.replace(/_/g, ' '),
-            valor: value
-        }))
+        const esTorso = CAMPOS_TORSO.some(c => valores[c.key] !== undefined)
+        const campos = esTorso ? CAMPOS_TORSO : CAMPOS_PANTALON
+        return campos.slice(0, 3).map(c => ({
+            campo: c.label,
+            valor: valores[c.key] ?? ''
+        })).filter(item => item.valor !== '')
     }
 
     const resumen = obtenerResumenValores(medida.valores)

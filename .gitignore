@@ -1,3 +1,6 @@
+# Tareas
+tasks/
+
 # Agentes y configuración de desarrollo
 .agents/
 AGENT.md

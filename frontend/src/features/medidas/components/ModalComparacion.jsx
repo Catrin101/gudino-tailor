@@ -1,5 +1,14 @@
 import { X, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { Button } from '../../../shared/components/Button'
+import { CAMPOS_TORSO, CAMPOS_PANTALON } from '../../../utils/medidas.config'
+
+const getLabel = (tipo, key) => {
+  const campos = tipo === 'Torso' ? CAMPOS_TORSO : CAMPOS_PANTALON
+  const campo = campos.find(c => c.key === key)
+  return campo ? campo.label : key.replace(/_/g, ' ')
+}
+
+const esEntero = (key) => key === 'numero_calzado'
 
 /**
  * Modal para comparar dos versiones de medidas
@@ -120,19 +129,19 @@ export function ModalComparacion({ medidaActual, medidaAnterior, onCerrar }) {
 
                                         return (
                                             <tr key={campo} className="hover:bg-gray-50">
-                                                <td className="px-3 py-3 text-xs sm:text-sm font-medium text-gray-900 capitalize">
-                                                    {campo.replace(/_/g, ' ')}
+                                                <td className="px-3 py-3 text-xs sm:text-sm font-medium text-gray-900">
+                                                    {getLabel(medidaActual.tipo_medida, campo)}
                                                 </td>
 
                                                 <td className="px-2 py-3 text-center text-xs sm:text-sm text-gray-600">
                                                     {medidaAnterior?.valores[campo]
-                                                        ? `${medidaAnterior.valores[campo]} cm`
+                                                        ? `${medidaAnterior.valores[campo]}${esEntero(campo) ? '' : ' cm'}`
                                                         : '-'
                                                     }
                                                 </td>
 
                                                 <td className="px-2 py-3 text-center text-xs sm:text-sm font-semibold text-gray-900">
-                                                    {diff.valor} cm
+                                                    {diff.valor}{esEntero(campo) ? '' : ' cm'}
                                                 </td>
 
                                                 <td className="px-2 py-3 text-center">
