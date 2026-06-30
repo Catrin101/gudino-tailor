@@ -19,12 +19,12 @@ export function ModalComparacion({ medidaActual, medidaAnterior, onCerrar }) {
         const valorActual = medidaActual.valores[campo]
         const valorAnterior = medidaAnterior?.valores[campo]
 
-        if (!valorAnterior) {
+        if (valorAnterior === undefined || valorAnterior === null) {
             return { tipo: 'nuevo', valor: valorActual }
         }
 
         const diferencia = valorActual - valorAnterior
-        const porcentaje = ((Math.abs(diferencia) / valorAnterior) * 100).toFixed(1)
+        const porcentaje = valorAnterior === 0 ? 'N/A' : ((Math.abs(diferencia) / valorAnterior) * 100).toFixed(1)
 
         if (Math.abs(diferencia) < 0.1) {
             return { tipo: 'igual', valor: valorActual, diferencia: 0, porcentaje: 0 }
@@ -165,7 +165,7 @@ export function ModalComparacion({ medidaActual, medidaAnterior, onCerrar }) {
                                                                 +{diff.diferencia} cm
                                                             </span>
                                                             <span className="text-xs hidden sm:inline">
-                                                                ({diff.porcentaje}%)
+                                                                ({diff.porcentaje}{diff.porcentaje !== 'N/A' ? '%' : ''})
                                                             </span>
                                                         </div>
                                                     )}
@@ -177,7 +177,7 @@ export function ModalComparacion({ medidaActual, medidaAnterior, onCerrar }) {
                                                                 -{diff.diferencia} cm
                                                             </span>
                                                             <span className="text-xs hidden sm:inline">
-                                                                ({diff.porcentaje}%)
+                                                                ({diff.porcentaje}{diff.porcentaje !== 'N/A' ? '%' : ''})
                                                             </span>
                                                         </div>
                                                     )}

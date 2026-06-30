@@ -80,15 +80,15 @@ export function FormularioMedidas({
       } else {
         if (esEntero) {
           const num = parseInt(valor)
-          if (isNaN(num) || num <= 0) {
-            nuevosErrores[campo.key] = 'Debe ser un número positivo'
+          if (isNaN(num) || num < 0) {
+            nuevosErrores[campo.key] = 'Debe ser un número no negativo'
           } else if (num > 50) {
             nuevosErrores[campo.key] = 'Máximo 50'
           }
         } else {
           const numero = parseFloat(valor)
-          if (isNaN(numero) || numero <= 0) {
-            nuevosErrores[campo.key] = 'Debe ser mayor a 0'
+          if (isNaN(numero) || numero < 0) {
+            nuevosErrores[campo.key] = 'Debe ser un número no negativo'
           } else if (numero > 300) {
             nuevosErrores[campo.key] = 'Máximo 300 cm'
           } else if (!/^\d+(\.\d{1,2})?$/.test(valor)) {
@@ -128,7 +128,7 @@ export function FormularioMedidas({
    * Calcular diferencia con medidas anteriores
    */
   const obtenerDiferencia = (key) => {
-    if (!medidasAnteriores?.valores || !valores[key]) return null
+    if (!medidasAnteriores?.valores || valores[key] === undefined || valores[key] === null || valores[key] === '') return null
 
     const valorAnterior = medidasAnteriores.valores[key]
     const valorNuevo = parseFloat(valores[key])
@@ -141,7 +141,7 @@ export function FormularioMedidas({
     return {
       diferencia: Math.abs(diferencia).toFixed(1),
       aumenta,
-      porcentaje: ((Math.abs(diferencia) / valorAnterior) * 100).toFixed(1)
+      porcentaje: valorAnterior === 0 ? 'N/A' : ((Math.abs(diferencia) / valorAnterior) * 100).toFixed(1)
     }
   }
 
@@ -219,7 +219,7 @@ export function FormularioMedidas({
                     type="number"
                     inputMode={campo.tipo === 'entero' ? 'numeric' : 'decimal'}
                     step={campo.tipo === 'entero' ? '1' : '0.5'}
-                    min={campo.tipo === 'entero' ? '1' : '0'}
+                    min="0"
                     value={valores[campo.key] || ''}
                     onChange={(e) => handleChange(campo.key, e.target.value)}
                     placeholder={campo.tipo === 'entero' ? '0' : '0.0'}

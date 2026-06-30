@@ -32,14 +32,14 @@ export class MedidaService {
 
       if (esEntero) {
         const num = parseInt(valor)
-        if (isNaN(num) || num <= 0) {
-          errores[campo] = 'Debe ser un número positivo'
+        if (isNaN(num) || num < 0) {
+          errores[campo] = 'Debe ser un número no negativo'
         } else if (num > 50) {
           errores[campo] = 'Valor demasiado grande (máximo 50)'
         }
       } else {
-        if (isNaN(numero) || numero <= 0) {
-          errores[campo] = 'Debe ser un número positivo'
+        if (isNaN(numero) || numero < 0) {
+          errores[campo] = 'Debe ser un número no negativo'
         } else if (numero > 300) {
           errores[campo] = 'Valor demasiado grande (máximo 300 cm)'
         } else if (!/^\d+(\.\d{1,2})?$/.test(valor.toString())) {
@@ -90,7 +90,7 @@ export class MedidaService {
             valorNuevo: parseFloat(valorNuevo),
             diferencia,
             tolerancia,
-            porcentaje: ((diferencia / parseFloat(valorAnterior)) * 100).toFixed(1)
+            porcentaje: valorAnterior === 0 ? 'N/A' : ((diferencia / parseFloat(valorAnterior)) * 100).toFixed(1)
           })
         }
       }
