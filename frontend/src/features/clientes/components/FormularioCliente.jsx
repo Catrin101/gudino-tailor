@@ -81,10 +81,11 @@ export function FormularioCliente({ cliente = null, onGuardar, onCancelar, loadi
       nuevosErrores.nombre = 'El nombre debe tener al menos 3 caracteres'
     }
 
-    if (!formData.telefono.trim()) {
-      nuevosErrores.telefono = 'El teléfono es obligatorio'
-    } else if (formData.telefono.length !== 10) {
-      nuevosErrores.telefono = 'El teléfono debe tener 10 dígitos'
+    // Solo validar teléfono si se proporcionó
+    if (formData.telefono && formData.telefono.trim() !== '') {
+      if (formData.telefono.length !== 10) {
+        nuevosErrores.telefono = 'El teléfono debe tener 10 dígitos'
+      }
     }
 
     setErrores(nuevosErrores)
@@ -118,15 +119,14 @@ export function FormularioCliente({ cliente = null, onGuardar, onCancelar, loadi
         disabled={loading}
       />
 
-      {/* Teléfono */}
+      {/* Teléfono (opcional) */}
       <Input
-        label="Teléfono"
+        label="Teléfono (opcional)"
         name="telefono"
         value={formData.telefono}
         onChange={handleTelefonoChange}
         placeholder="6861234567"
         error={errores.telefono}
-        required
         disabled={loading}
         maxLength={10}
       />

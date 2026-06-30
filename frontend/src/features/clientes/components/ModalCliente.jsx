@@ -73,7 +73,9 @@ export function ModalCliente({ cliente, onCerrar, onEditar, onDesactivar }) {
               <Phone className="w-6 h-6 text-primary-600" />
               <div>
                 <p className="text-sm text-gray-500">Teléfono</p>
-                <p className="text-lg font-semibold">{formatearTelefono(cliente.telefono)}</p>
+                <p className="text-lg font-semibold">
+                  {cliente.telefono ? formatearTelefono(cliente.telefono) : <em className="text-gray-400">No registrado</em>}
+                </p>
               </div>
             </div>
 

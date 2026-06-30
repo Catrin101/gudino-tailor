@@ -11,7 +11,7 @@ export function Paso1SeleccionCliente({ clienteSeleccionado, onSeleccionar }) {
 
   const clientesFiltrados = clientes.filter(cliente =>
     cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    cliente.telefono.includes(busqueda)
+    (cliente.telefono && cliente.telefono.includes(busqueda))
   )
 
   return (
@@ -39,7 +39,7 @@ export function Paso1SeleccionCliente({ clienteSeleccionado, onSeleccionar }) {
         <div className="mb-6 p-4 bg-primary-50 border border-primary-200 rounded-lg">
           <p className="text-sm text-primary-600 font-medium mb-1">Cliente Seleccionado:</p>
           <p className="text-lg font-bold text-primary-900">{clienteSeleccionado.nombre}</p>
-          <p className="text-sm text-primary-700">{clienteSeleccionado.telefono}</p>
+          <p className="text-sm text-primary-700">{clienteSeleccionado.telefono || 'Sin teléfono'}</p>
         </div>
       )}
 
@@ -65,7 +65,7 @@ export function Paso1SeleccionCliente({ clienteSeleccionado, onSeleccionar }) {
                 <p className="font-semibold text-gray-900 truncate">{cliente.nombre}</p>
                 <div className="flex items-center gap-1 text-sm text-gray-500">
                   <Phone className="w-3 h-3" />
-                  <span>{cliente.telefono}</span>
+                  <span>{cliente.telefono || 'Sin teléfono'}</span>
                 </div>
               </div>
             </div>

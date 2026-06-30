@@ -36,9 +36,9 @@ export function TarjetaCliente({ cliente, onClick }) {
           </div>
 
           {/* Teléfono */}
-          <div className="flex items-center gap-2 text-gray-600 mb-2">
+          <div className={`flex items-center gap-2 mb-2 ${cliente.telefono ? 'text-gray-600' : 'text-gray-400'}`}>
             <Phone className="w-4 h-4" />
-            <span>{formatearTelefono(cliente.telefono)}</span>
+            <span>{cliente.telefono ? formatearTelefono(cliente.telefono) : <em>Sin teléfono</em>}</span>
           </div>
 
           {/* Fecha de registro */}

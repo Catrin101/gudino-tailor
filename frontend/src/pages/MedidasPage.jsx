@@ -263,7 +263,7 @@ export function MedidasPage() {
                     className="text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-primary-300 transition-colors"
                   >
                     <p className="font-semibold text-gray-900">{cliente.nombre}</p>
-                    <p className="text-sm text-gray-500">{cliente.telefono}</p>
+                    <p className="text-sm text-gray-500">{cliente.telefono || 'Sin teléfono'}</p>
                   </button>
                 ))
               ) : (
@@ -286,7 +286,7 @@ export function MedidasPage() {
                 <h2 className="text-2xl font-bold text-gray-900">
                   {clienteSeleccionado.nombre}
                 </h2>
-                <p className="text-gray-600">{clienteSeleccionado.telefono}</p>
+                <p className="text-gray-600">{clienteSeleccionado.telefono || 'Sin teléfono'}</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">

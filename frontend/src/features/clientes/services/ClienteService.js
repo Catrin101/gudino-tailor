@@ -24,11 +24,8 @@ export class ClienteService {
       errores.nombre = 'El nombre debe tener al menos 3 caracteres'
     }
 
-    // Validar teléfono
-    if (!cliente.telefono || cliente.telefono.trim() === '') {
-      errores.telefono = 'El teléfono es obligatorio'
-    } else {
-      // Limpiar teléfono (solo números)
+    // Validar teléfono (opcional, pero si se proporciona debe ser válido)
+    if (cliente.telefono && cliente.telefono.trim() !== '') {
       const telefonoLimpio = cliente.telefono.replace(/\D/g, '')
       
       if (telefonoLimpio.length !== 10) {
@@ -65,7 +62,7 @@ export class ClienteService {
   limpiarDatos(cliente) {
     return {
       nombre: cliente.nombre?.trim() || '',
-      telefono: this.formatearTelefono(cliente.telefono),
+      telefono: cliente.telefono ? this.formatearTelefono(cliente.telefono) : null,
       notas_generales: cliente.notas_generales?.trim() || null,
       deuda_historica: parseFloat(cliente.deuda_historica) || 0
     }
