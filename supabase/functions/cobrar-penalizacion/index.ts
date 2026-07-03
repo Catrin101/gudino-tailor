@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
     const resultado = await cobrarPenalizacion(
       supabase,
       Number(idPenalizacion),
-      body.notas || ""
+      body.notas || "",
+      body.id_pedido ? Number(body.id_pedido) : undefined
     );
 
     return jsonResponse({ data: resultado });

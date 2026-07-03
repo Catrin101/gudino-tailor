@@ -39,9 +39,9 @@
 
 ## Etapa 3: Integración con módulos existentes
 
-- [ ] Conectar penalizaciones al `saldo_pendiente` del pedido vinculado
-- [ ] Mostrar penalizaciones pendientes en la sección de Pagos/Cuentas
-- [ ] Integrar indicador de comportamiento del cliente (badge de alertas)
+- [x] Conectar penalizaciones al `saldo_pendiente` del pedido vinculado
+- [x] Mostrar penalizaciones pendientes en la sección de Pagos/Cuentas
+- [x] Integrar indicador de comportamiento del cliente (badge de alertas)
 
 ---
 

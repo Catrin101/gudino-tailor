@@ -1,11 +1,21 @@
+import { useEffect } from 'react'
 import { User, Phone, Calendar, AlertCircle } from 'lucide-react'
 import { Card } from '../../../shared/components/Card'
+import { usePenalizaciones } from '../../citas/hooks/usePenalizaciones'
 
 /**
  * Tarjeta individual de cliente
  * Muestra información resumida del cliente
  */
 export function TarjetaCliente({ cliente, onClick }) {
+  const { comportamiento, cargarComportamiento } = usePenalizaciones()
+
+  useEffect(() => {
+    if (cliente?.id_cliente) {
+      cargarComportamiento(cliente.id_cliente)
+    }
+  }, [cliente?.id_cliente])
+
   const formatearTelefono = (telefono) => {
     if (!telefono || telefono.length !== 10) return telefono
     return `(${telefono.slice(0, 3)}) ${telefono.slice(3, 6)}-${telefono.slice(6)}`
@@ -55,8 +65,26 @@ export function TarjetaCliente({ cliente, onClick }) {
           )}
         </div>
 
-        {/* Indicador de deuda histórica */}
-        {cliente.deuda_historica > 0 && (
+        {/* Indicador de comportamiento */}
+        {comportamiento && comportamiento.detalles.totalPenalizaciones > 0 && (
+          <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+            comportamiento.color === 'success' ? 'bg-success-50 text-success-700' :
+            comportamiento.color === 'green' ? 'bg-green-50 text-green-700' :
+            comportamiento.color === 'warning' ? 'bg-warning-50 text-warning-700' :
+            'bg-danger-50 text-danger-700'
+          }`}>
+            <AlertCircle className="w-4 h-4" />
+            <span>{comportamiento.label}</span>
+            {comportamiento.detalles.pendientes > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-white rounded-full">
+                ${comportamiento.detalles.totalPendiente.toFixed(0)}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Indicador de deuda histórica (solo si no hay comportamiento) */}
+        {cliente.deuda_historica > 0 && !comportamiento?.detalles?.totalPenalizaciones && (
           <div className="flex items-center gap-1 px-3 py-1 bg-warning-50 text-warning-700 rounded-full text-sm">
             <AlertCircle className="w-4 h-4" />
             <span className="font-medium">

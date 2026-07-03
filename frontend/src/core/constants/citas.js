@@ -133,3 +133,17 @@ export const PENALIZACIONES_DEFAULT = {
   CANCELAR_MENOS_24: 150,
   NO_SHOW: 200
 }
+
+// ─── ETIQUETAS DE TIPO DE PENALIZACIÓN (para UI) ──────────
+export const ETIQUETAS_TIPO_PENALIZACION = {
+  [TIPOS_PENALIZACION.CANCELACION_TARDIA]: 'Cancelación tardía',
+  [TIPOS_PENALIZACION.NO_SHOW]: 'No Show',
+  [TIPOS_PENALIZACION.RETRASO_EXCESIVO]: 'Retraso excesivo'
+}
+
+// ─── COLORES POR ESTADO DE COBRO ──────────────────────────
+export const COLORES_ESTADO_COBRO = {
+  [ESTADOS_COBRO.PENDIENTE]: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+  [ESTADOS_COBRO.COBRADA]: { bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
+  [ESTADOS_COBRO.CONDONADA]: { bg: 'bg-gray-100', text: 'text-gray-500', dot: 'bg-gray-400' }
+}

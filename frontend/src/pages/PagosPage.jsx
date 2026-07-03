@@ -8,6 +8,8 @@ import { Card } from '../shared/components/Card'
 import { Button } from '../shared/components/Button'
 import { Input } from '../shared/components/Input'
 import { DollarSign, Calendar, Search, Filter, Download } from 'lucide-react'
+import { usePenalizaciones } from '../features/citas/hooks/usePenalizaciones'
+import { PanelPenalizaciones } from '../features/pagos/components/PanelPenalizaciones'
 
 /**
  * Página principal del módulo de pagos y caja
@@ -25,6 +27,14 @@ export function PagosPage() {
 
   const { pedidos, cargarPedidos: cargarPedidosCompletos } = usePedidos()
 
+  const {
+    penalizaciones,
+    loading: loadingPenalizaciones,
+    cargarPendientes,
+    cobrar: cobrarPenalizacion,
+    condonar: condonarPenalizacion
+  } = usePenalizaciones()
+
   const [vistaActual, setVistaActual] = useState('resumen') // 'resumen' | 'historial' | 'registrar'
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null)
 
@@ -40,7 +50,8 @@ export function PagosPage() {
   useEffect(() => {
     cargarResumenDia()
     cargarPagosPorFechas(filtros.fechaInicio, filtros.fechaFin)
-    cargarPedidosCompletos() // Cargar pedidos para poder buscarlos
+    cargarPedidosCompletos()
+    cargarPendientes()
   }, [])
 
   /**
@@ -167,6 +178,20 @@ export function PagosPage() {
                 }`}
             >
               Historial de Pagos
+            </button>
+            <button
+              onClick={() => setVistaActual('penalizaciones')}
+              className={`px-4 py-2 font-medium transition-colors relative ${vistaActual === 'penalizaciones'
+                ? 'text-primary-700 border-b-2 border-primary-700'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
+            >
+              Penalizaciones
+              {penalizaciones.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-danger-100 text-danger-700 rounded-full">
+                  {penalizaciones.length}
+                </span>
+              )}
             </button>
           </div>
         )}
@@ -555,6 +580,16 @@ export function PagosPage() {
             />
           )}
         </Card>
+      )}
+
+      {/* VISTA: Penalizaciones */}
+      {vistaActual === 'penalizaciones' && (
+        <PanelPenalizaciones
+          penalizaciones={penalizaciones}
+          loading={loadingPenalizaciones}
+          onCobrar={cobrarPenalizacion}
+          onCondonar={condonarPenalizacion}
+        />
       )}
     </div>
   )

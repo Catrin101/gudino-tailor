@@ -468,10 +468,15 @@ export async function condonarPenalizacion(supabase: SupabaseClient, idPenalizac
   return data;
 }
 
-export async function cobrarPenalizacion(supabase: SupabaseClient, idPenalizacion: number, notas = "") {
+export async function cobrarPenalizacion(
+  supabase: SupabaseClient,
+  idPenalizacion: number,
+  notas = "",
+  idPedido?: number
+) {
   const { data: penalizacion, error: fetchError } = await supabase
     .from("penalizaciones_cita")
-    .select("estado_cobro")
+    .select("estado_cobro, monto, id_cliente")
     .eq("id_penalizacion", idPenalizacion)
     .single();
 
@@ -484,6 +489,7 @@ export async function cobrarPenalizacion(supabase: SupabaseClient, idPenalizacio
     .from("penalizaciones_cita")
     .update({
       estado_cobro: "Cobrada",
+      id_pedido: idPedido || null,
       notas_cobro: notas || `Cobrada el ${new Date().toISOString()}`,
     })
     .eq("id_penalizacion", idPenalizacion)
@@ -491,6 +497,23 @@ export async function cobrarPenalizacion(supabase: SupabaseClient, idPenalizacio
     .single();
 
   if (error) throw new Error(`Error al cobrar penalización: ${error.message}`);
+
+  if (idPedido) {
+    const { error: pagoError } = await supabase
+      .from("pagos")
+      .insert([{
+        id_pedido: idPedido,
+        monto: penalizacion.monto,
+        concepto: "Penalizacion",
+        metodo: "Efectivo",
+        notas: `Penalización cobrada: ${notas || "Cobro automático"}`,
+      }]);
+
+    if (pagoError) {
+      console.error("Error al crear pago por penalización:", pagoError);
+    }
+  }
+
   return data;
 }
 
