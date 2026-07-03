@@ -10,6 +10,7 @@ import { MedidasPage } from './pages/MedidasPage'
 import { PedidosPage } from './pages/PedidosPage'
 import { PagosPage } from './pages/PagosPage'
 import { ConfiguracionPage } from './pages/ConfiguracionPage'
+import { CalendarioPage } from './features/citas/pages/CalendarioPage'
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
               <Route path="medidas" element={<MedidasPage />} />
               <Route path="pedidos" element={<PedidosPage />} />
               <Route path="pagos" element={<PagosPage />} />
+              <Route path="calendario" element={<CalendarioPage />} />
               <Route path="configuracion" element={<ConfiguracionPage />} />
             </Route>
 

@@ -1,8 +1,9 @@
-import { Search, Bell, User, Menu } from 'lucide-react'
+import { Search, Bell, User, Menu, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { LogOut } from 'lucide-react'
 import { useAuth } from '../features/auth/context/AuthContext'
 import { useNotification } from '../shared/context/NotificationContext'
+import { WizardCita } from '../features/citas/components/wizard/WizardCita'
 
 /**
  * Barra de navegación superior
@@ -10,6 +11,7 @@ import { useNotification } from '../shared/context/NotificationContext'
  */
 export function Navbar({ onToggleSidebar, onSearch }) {
   const [terminoBusqueda, setTerminoBusqueda] = useState('')
+  const [mostrarWizardCita, setMostrarWizardCita] = useState(false)
 
   const { logout, getUserData } = useAuth()
   const notification = useNotification()
@@ -43,6 +45,7 @@ export function Navbar({ onToggleSidebar, onSearch }) {
   }
 
   return (
+    <>
     <nav className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40 h-16">
       <div className="h-full px-4 flex items-center justify-between gap-4">
         {/* Botón de menú hamburguesa (móvil) + Logo */}
@@ -83,6 +86,16 @@ export function Navbar({ onToggleSidebar, onSearch }) {
 
         {/* Acciones de usuario - ACTUALIZAR */}
         <div className="flex items-center gap-2">
+          {/* Botón Nueva Cita */}
+          <button
+            onClick={() => setMostrarWizardCita(true)}
+            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white
+                     rounded-lg font-semibold text-sm hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva Cita
+          </button>
+
           {/* Notificaciones */}
           <button
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
@@ -119,5 +132,16 @@ export function Navbar({ onToggleSidebar, onSearch }) {
         </div>
       </div>
     </nav>
+
+      {mostrarWizardCita && (
+        <WizardCita
+          onCerrar={() => setMostrarWizardCita(false)}
+          onGuardada={() => {
+            setMostrarWizardCita(false)
+            notification.success('Cita creada correctamente')
+          }}
+        />
+      )}
+    </>
   )
 }

@@ -27,13 +27,13 @@
 
 ## Etapa 2: Interfaz de usuario (Frontend)
 
-- [ ] Vista de Calendario (semanal y diario)
-- [ ] Panel lateral "Agenda de Hoy" en el Tablero
-- [ ] Wizard de Nueva Cita (4 pasos)
-- [ ] Tarjeta de detalle de cita con botones de acción
-- [ ] Sección de Historial de Citas en el perfil del cliente
-- [ ] Modal de confirmación con monto de penalización
-- [ ] Modal de condonación con campo de motivo obligatorio
+- [x] Vista de Calendario (semanal y diario)
+- [x] Panel lateral "Agenda de Hoy" en el Tablero
+- [x] Wizard de Nueva Cita (4 pasos)
+- [x] Tarjeta de detalle de cita con botones de acción
+- [x] Sección de Historial de Citas en el perfil del cliente
+- [x] Modal de confirmación con monto de penalización
+- [x] Modal de condonación con campo de motivo obligatorio
 
 ---
 

@@ -6,7 +6,8 @@ import {
   DollarSign,
   Settings,
   X,
-  ChevronLeft
+  ChevronLeft,
+  CalendarDays
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
@@ -42,6 +43,13 @@ export function Sidebar({ isOpen, onClose }) {
       label: 'Pedidos',
       icon: Package,
       path: '/pedidos'
+    },
+    {
+      id: 'calendario',
+      label: 'Calendario',
+      icon: CalendarDays,
+      path: '/calendario',
+      badge: null
     },
     {
       id: 'pagos',

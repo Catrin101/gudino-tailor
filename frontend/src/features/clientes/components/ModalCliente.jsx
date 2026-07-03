@@ -1,7 +1,8 @@
-import { X, User, Phone, Calendar, FileText, DollarSign, Package } from 'lucide-react'
+import { X, User, Phone, Calendar, FileText, DollarSign, Package, CalendarDays } from 'lucide-react'
 import { Button } from '../../../shared/components/Button'
 import { useEffect, useState } from 'react'
 import { ClienteService } from '../services/ClienteService'
+import { HistorialCitasCliente } from '../../citas/components/historial/HistorialCitasCliente'
 
 /**
  * Modal para ver detalles completos del cliente
@@ -10,6 +11,7 @@ import { ClienteService } from '../services/ClienteService'
 export function ModalCliente({ cliente, onCerrar, onEditar, onDesactivar }) {
   const [estadisticas, setEstadisticas] = useState(null)
   const [cargando, setCargando] = useState(true)
+  const [seccionActiva, setSeccionActiva] = useState('info')
 
   useEffect(() => {
     cargarEstadisticas()
@@ -170,6 +172,39 @@ export function ModalCliente({ cliente, onCerrar, onEditar, onDesactivar }) {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* Tabs de navegación */}
+        <div className="border-t border-gray-200">
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setSeccionActiva('info')}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                seccionActiva === 'info'
+                  ? 'text-primary-600 border-b-2 border-primary-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Información
+            </button>
+            <button
+              onClick={() => setSeccionActiva('citas')}
+              className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+                seccionActiva === 'citas'
+                  ? 'text-primary-600 border-b-2 border-primary-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <CalendarDays className="w-4 h-4" />
+              Citas
+            </button>
+          </div>
+
+          {seccionActiva === 'citas' && (
+            <div className="p-6">
+              <HistorialCitasCliente idCliente={cliente.id_cliente} />
             </div>
           )}
         </div>

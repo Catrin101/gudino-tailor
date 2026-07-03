@@ -3,6 +3,7 @@ import { EstadisticaCard } from '../features/dashboard/components/EstadisticaCar
 import { GraficaIngresos } from '../features/dashboard/components/GraficaIngresos'
 import { ListaActividad } from '../features/dashboard/components/ListaActividad'
 import { ProximosVencimientos } from '../features/dashboard/components/ProximosVencimientos'
+import { AgendaHoy } from '../features/citas/components/agenda/AgendaHoy'
 import { Package, Users, DollarSign, AlertCircle, RefreshCw } from 'lucide-react'
 import { Button } from '../shared/components/Button'
 
@@ -154,19 +155,26 @@ export function DashboardPage() {
       )}
 
       {/* Secciones adicionales */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Próximos vencimientos */}
-        <ProximosVencimientos
-          pedidos={proximosVencimientos}
-          loading={loading}
-          onPedidoClick={handlePedidoClick}
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Agenda de Hoy */}
+        <div className="lg:col-span-1">
+          <AgendaHoy />
+        </div>
 
-        {/* Actividad reciente */}
-        <ListaActividad
-          actividades={actividades}
-          loading={loading}
-        />
+        <div className="lg:col-span-2 space-y-6">
+          {/* Próximos vencimientos */}
+          <ProximosVencimientos
+            pedidos={proximosVencimientos}
+            loading={loading}
+            onPedidoClick={handlePedidoClick}
+          />
+
+          {/* Actividad reciente */}
+          <ListaActividad
+            actividades={actividades}
+            loading={loading}
+          />
+        </div>
       </div>
 
       {/* Información adicional */}
