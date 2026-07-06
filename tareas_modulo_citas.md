@@ -47,6 +47,6 @@
 
 ## Etapa 4: Configuración y ajustes
 
-- [ ] Pantalla de Ajustes: Horario de atención del taller
-- [ ] Pantalla de Ajustes: Montos de penalización (editables)
-- [ ] Pantalla de Ajustes: Duración default por tipo de cita
+- [x] Pantalla de Ajustes: Horario de atención del taller
+- [x] Pantalla de Ajustes: Montos de penalización (editables)
+- [x] Pantalla de Ajustes: Duración default por tipo de cita

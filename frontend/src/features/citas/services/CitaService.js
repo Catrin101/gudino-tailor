@@ -3,10 +3,10 @@ import {
   RAZONES_CITA,
   ESTADOS_CITA,
   CANCELADA_POR,
-  TIPOS_PENALIZACION,
-  PENALIZACIONES_DEFAULT
+  TIPOS_PENALIZACION
 } from '../../../core/constants/citas'
 import { ESTADOS_PEDIDO } from '../../../core/constants/estados'
+import { useConfiguracionStore } from '../../../core/store/useConfiguracionStore'
 
 /**
  * Servicio de lógica de negocio para citas
@@ -46,7 +46,7 @@ export class CitaService {
 
   /**
    * R-CITA-03: Verificar horario de atención del taller
-   * Default: Lunes a Sábado, 9:00 a.m. — 7:00 p.m.
+   * Lee la configuración del store de Zustand
    * @param {string} fechaHoraInicio
    * @param {string} fechaHoraFin
    * @returns {Object} { valido, mensaje }
@@ -56,22 +56,32 @@ export class CitaService {
     const fin = new Date(fechaHoraFin)
     const diaSemana = inicio.getDay()
 
-    // 0 = Domingo, 6 = Sábado
-    if (diaSemana === 0) {
+    const config = useConfiguracionStore.getState()
+    const { apertura, cierre, dias } = config.getHorario()
+
+    // Verificar si el día está en los días de atención
+    if (!dias.includes(diaSemana)) {
+      const nombresDias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
       return {
         valido: false,
-        mensaje: 'El taller no abre los domingos'
+        mensaje: `El taller no atiende los ${nombresDias[diaSemana]}s`
       }
     }
 
     const horaInicio = inicio.getHours() + inicio.getMinutes() / 60
     const horaFin = fin.getHours() + fin.getMinutes() / 60
 
-    // 9:00 a.m. = 9, 7:00 p.m. = 19
-    if (horaInicio < 9 || horaFin > 19) {
+    const [hApertura, mApertura] = apertura.split(':').map(Number)
+    const [hCierre, mCierre] = cierre.split(':').map(Number)
+    const horaApertura = hApertura + mApertura / 60
+    const horaCierre = hCierre + mCierre / 60
+
+    if (horaInicio < horaApertura || horaFin > horaCierre) {
+      const aperturaStr = apertura.replace(/^0/, '').replace(/:00$/, ':00').replace(/:30/, ':30')
+      const cierreStr = cierre.replace(/^0/, '').replace(/:00$/, ':00').replace(/:30/, ':30')
       return {
         valido: false,
-        mensaje: 'El horario de atención es de 9:00 a.m. a 7:00 p.m.'
+        mensaje: `El horario de atención es de ${apertura} a ${cierre}`
       }
     }
 
@@ -226,12 +236,14 @@ export class CitaService {
       }
     }
 
-    // Calcular duración basada en la razón si no se especifica fin
-    const razonInfo = RAZONES_CITA[datos.razon]
+    // Calcular duración basada en la configuración si no se especifica fin
+    const config = useConfiguracionStore.getState()
+    const duraciones = config.getDuraciones()
+    const duracionMin = duraciones[datos.razon] || 30
     let fechaFin = datos.fecha_hora_fin
-    if (!datos.fecha_hora_fin && datos.fecha_hora_inicio && razonInfo) {
+    if (!datos.fecha_hora_fin && datos.fecha_hora_inicio) {
       const inicio = new Date(datos.fecha_hora_inicio)
-      fechaFin = new Date(inicio.getTime() + razonInfo.duracion * 60 * 1000).toISOString()
+      fechaFin = new Date(inicio.getTime() + duracionMin * 60 * 1000).toISOString()
     }
 
     const cita = await this.repository.crear({
@@ -254,6 +266,7 @@ export class CitaService {
 
   /**
    * R-MOVER: Calcular penalización por movimiento
+   * Lee los montos de la configuración del store
    * @param {string} fechaHoraOriginal - Fecha/hora original de la cita
    * @returns {Promise<Object>} { tipoPenalizacion, monto, mensaje }
    */
@@ -262,27 +275,27 @@ export class CitaService {
     const original = new Date(fechaHoraOriginal)
     const horasAntes = (original - ahora) / (1000 * 60 * 60)
 
+    const config = useConfiguracionStore.getState()
+    const pen = config.getPenalizaciones()
+
     if (horasAntes > 48) {
       return { tipoPenalizacion: null, monto: 0, mensaje: 'Sin penalización' }
     }
 
     if (horasAntes >= 24) {
-      // R-MOVER-02: 24-48 horas — verificar si es 1ª vez en el mes
-      // Se debe verificar en el momento del movimiento real
       return {
         tipoPenalizacion: TIPOS_PENALIZACION.RETRASO_EXCESIVO,
-        monto: PENALIZACIONES_DEFAULT.MOVER_24_48,
+        monto: pen.MOVER_24_48,
         requiereVerificacion: true,
-        mensaje: 'Penalización de $50 MXN (verificar historial del mes)'
+        mensaje: `Penalización de $${pen.MOVER_24_48} MXN (verificar historial del mes)`
       }
     }
 
-    // R-MOVER-03: Menos de 24 horas
     return {
       tipoPenalizacion: TIPOS_PENALIZACION.RETRASO_EXCESIVO,
-      monto: PENALIZACIONES_DEFAULT.MOVER_MENOS_24,
+      monto: pen.MOVER_MENOS_24,
       requiereVerificacion: false,
-      mensaje: 'Penalización de $100 MXN'
+      mensaje: `Penalización de $${pen.MOVER_MENOS_24} MXN`
     }
   }
 
@@ -344,6 +357,7 @@ export class CitaService {
 
   /**
    * R-CANCEL: Calcular penalización por cancelación
+   * Lee los montos de la configuración del store
    * @param {string} fechaHoraCita
    * @returns {Object} { tipoPenalizacion, monto, mensaje }
    */
@@ -352,24 +366,25 @@ export class CitaService {
     const cita = new Date(fechaHoraCita)
     const horasAntes = (cita - ahora) / (1000 * 60 * 60)
 
+    const config = useConfiguracionStore.getState()
+    const pen = config.getPenalizaciones()
+
     if (horasAntes > 48) {
       return { tipoPenalizacion: null, monto: 0, mensaje: 'Sin penalización' }
     }
 
     if (horasAntes >= 24) {
-      // R-CANCEL-02
       return {
         tipoPenalizacion: TIPOS_PENALIZACION.CANCELACION_TARDIA,
-        monto: PENALIZACIONES_DEFAULT.CANCELAR_24_48,
-        mensaje: 'Penalización de $75 MXN por cancelación tardía'
+        monto: pen.CANCELAR_24_48,
+        mensaje: `Penalización de $${pen.CANCELAR_24_48} MXN por cancelación tardía`
       }
     }
 
-    // R-CANCEL-03: Menos de 24 horas
     return {
       tipoPenalizacion: TIPOS_PENALIZACION.CANCELACION_TARDIA,
-      monto: PENALIZACIONES_DEFAULT.CANCELAR_MENOS_24,
-      mensaje: 'Penalización de $150 MXN por cancelación de último momento'
+      monto: pen.CANCELAR_MENOS_24,
+      mensaje: `Penalización de $${pen.CANCELAR_MENOS_24} MXN por cancelación de último momento`
     }
   }
 
@@ -439,12 +454,14 @@ export class CitaService {
       throw new Error('Solo se puede marcar como No Show citas Agendadas o Confirmadas')
     }
 
-    // Generar penalización automática de $200 MXN
+    // Generar penalización automática según configuración
+    const config = useConfiguracionStore.getState()
+    const pen = config.getPenalizaciones()
     const penalizacion = await this.repository.crearPenalizacion({
       id_cita: idCita,
       id_cliente: cita.id_cliente,
       tipo: TIPOS_PENALIZACION.NO_SHOW,
-      monto: PENALIZACIONES_DEFAULT.NO_SHOW,
+      monto: pen.NO_SHOW,
       estado_cobro: 'Pendiente',
       notas_cobro: null
     })

@@ -1,23 +1,32 @@
 import { useState, useEffect } from 'react'
-import { RAZONES_CITA, ESTADOS_CITA } from '../../../../core/constants/citas'
+import { RAZONES_CITA } from '../../../../core/constants/citas'
+import { useConfiguracionStore } from '../../../../core/store/useConfiguracionStore'
 import { Calendar, Clock, AlertCircle, CheckCircle } from 'lucide-react'
-
-const HORAS_DISPONIBLES = Array.from({ length: 20 }, (_, i) => {
-  const hora = 9 + Math.floor(i / 2)
-  const minuto = i % 2 === 0 ? '00' : '30'
-  return `${String(hora).padStart(2, '0')}:${minuto}`
-}).filter(h => {
-  const [hora] = h.split(':').map(Number)
-  return hora >= 9 && hora < 19
-})
 
 export function Paso3FechaHora({ fechaSeleccionada, horaSeleccionada, duracion, razon, onActualizar }) {
   const [fecha, setFecha] = useState(fechaSeleccionada || '')
   const [hora, setHora] = useState(horaSeleccionada || '')
   const [error, setError] = useState('')
 
-  const razonInfo = RAZONES_CITA[razon]
-  const duracionMin = duracion || razonInfo?.duracion || 30
+  const getHorario = useConfiguracionStore(s => s.getHorario)
+  const getDuraciones = useConfiguracionStore(s => s.getDuraciones)
+  const getHoraCierre = useConfiguracionStore(s => s.getHoraCierre)
+  const getDiasAtencion = useConfiguracionStore(s => s.getDiasAtencion)
+
+  const horario = getHorario()
+  const duraciones = getDuraciones()
+  const duracionMin = duracion || duraciones[razon] || 30
+
+  // Generar horas disponibles según horario del taller
+  const horasDisponibles = []
+  const [hApertura] = horario.apertura.split(':').map(Number)
+  const [hCierre] = horario.cierre.split(':').map(Number)
+  for (let h = hApertura; h < hCierre; h++) {
+    horasDisponibles.push(`${String(h).padStart(2, '0')}:00`)
+    if (h + 1 < hCierre) {
+      horasDisponibles.push(`${String(h).padStart(2, '0')}:30`)
+    }
+  }
 
   useEffect(() => {
     if (fecha && hora) {
@@ -26,14 +35,20 @@ export function Paso3FechaHora({ fechaSeleccionada, horaSeleccionada, duracion, 
       inicio.setHours(h, m, 0, 0)
       const fin = new Date(inicio.getTime() + duracionMin * 60 * 1000)
 
-      // Validar horario del taller
+      // Validar día de atención
       const diaSemana = inicio.getDay()
-      if (diaSemana === 0) {
-        setError('El taller no abre los domingos')
+      if (!getDiasAtencion().includes(diaSemana)) {
+        const nombresDias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+        setError(`El taller no atiende los ${nombresDias[diaSemana]}s`)
         return
       }
-      if (fin.getHours() > 19 || (fin.getHours() === 19 && fin.getMinutes() > 0)) {
-        setError('La cita excede el horario de atención (hasta 7:00 p.m.)')
+
+      // Validar horario del taller
+      const horaCierreNum = getHoraCierre()
+      const finHoras = fin.getHours() + fin.getMinutes() / 60
+      if (finHoras > horaCierreNum) {
+        const cierre = horario.cierre
+        setError(`La cita excede el horario de atención (hasta ${cierre})`)
         return
       }
 
@@ -96,7 +111,7 @@ export function Paso3FechaHora({ fechaSeleccionada, horaSeleccionada, duracion, 
           Hora
         </label>
         <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-          {HORAS_DISPONIBLES.map(h => (
+          {horasDisponibles.map(h => (
             <button
               key={h}
               onClick={() => setHora(h)}

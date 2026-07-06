@@ -1,6 +1,24 @@
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// ─── Constantes (replicadas de frontend/src/core/constants/citas.js) ────
+// ─── Constantes Default (fallback si no hay config en BD) ────
+
+const CONFIG_DEFAULTS = {
+  hora_apertura: "09:00",
+  hora_cierre: "19:00",
+  dias_atencion: [1, 2, 3, 4, 5, 6],
+  penalizacion_mover_24_48: 50,
+  penalizacion_mover_menos_24: 100,
+  penalizacion_cancelar_24_48: 75,
+  penalizacion_cancelar_menos_24: 150,
+  penalizacion_no_show: 200,
+  duracion_prueba_parcial: 30,
+  duracion_entrega_pedido: 15,
+  duracion_toma_medidas: 20,
+  duracion_devolucion_renta: 10,
+  duracion_remiendo_entrega: 10,
+  duracion_consulta: 20,
+  duracion_otro: 15,
+};
 
 export const RAZONES_CITA: Record<string, { label: string; duracion: number }> = {
   PRUEBA_PARCIAL: { label: "Prueba de prenda", duracion: 30 },
@@ -32,15 +50,39 @@ export const TIPOS_PENALIZACION = {
   RETRASO_EXCESIVO: "Retraso_Excesivo",
 } as const;
 
-export const PENALIZACIONES_DEFAULT = {
-  MOVER_24_48: 50,
-  MOVER_MENOS_24: 100,
-  CANCELAR_24_48: 75,
-  CANCELAR_MENOS_24: 150,
-  NO_SHOW: 200,
-};
-
 const ESTADOS_PEDIDO_VALIDOS = ["En Espera", "En Proceso", "Prueba"];
+
+// ─── Obtener configuración del taller ────────────────────────────────────
+
+export async function obtenerConfiguracion(supabase: SupabaseClient): Promise<typeof CONFIG_DEFAULTS> {
+  const { data, error } = await supabase
+    .from("configuracion_taller")
+    .select("*")
+    .eq("id", 1)
+    .single();
+
+  if (error || !data) {
+    return { ...CONFIG_DEFAULTS };
+  }
+
+  return {
+    hora_apertura: data.hora_apertura || CONFIG_DEFAULTS.hora_apertura,
+    hora_cierre: data.hora_cierre || CONFIG_DEFAULTS.hora_cierre,
+    dias_atencion: data.dias_atencion || CONFIG_DEFAULTS.dias_atencion,
+    penalizacion_mover_24_48: data.penalizacion_mover_24_48 ?? CONFIG_DEFAULTS.penalizacion_mover_24_48,
+    penalizacion_mover_menos_24: data.penalizacion_mover_menos_24 ?? CONFIG_DEFAULTS.penalizacion_mover_menos_24,
+    penalizacion_cancelar_24_48: data.penalizacion_cancelar_24_48 ?? CONFIG_DEFAULTS.penalizacion_cancelar_24_48,
+    penalizacion_cancelar_menos_24: data.penalizacion_cancelar_menos_24 ?? CONFIG_DEFAULTS.penalizacion_cancelar_menos_24,
+    penalizacion_no_show: data.penalizacion_no_show ?? CONFIG_DEFAULTS.penalizacion_no_show,
+    duracion_prueba_parcial: data.duracion_prueba_parcial ?? CONFIG_DEFAULTS.duracion_prueba_parcial,
+    duracion_entrega_pedido: data.duracion_entrega_pedido ?? CONFIG_DEFAULTS.duracion_entrega_pedido,
+    duracion_toma_medidas: data.duracion_toma_medidas ?? CONFIG_DEFAULTS.duracion_toma_medidas,
+    duracion_devolucion_renta: data.duracion_devolucion_renta ?? CONFIG_DEFAULTS.duracion_devolucion_renta,
+    duracion_remiendo_entrega: data.duracion_remiendo_entrega ?? CONFIG_DEFAULTS.duracion_remiendo_entrega,
+    duracion_consulta: data.duracion_consulta ?? CONFIG_DEFAULTS.duracion_consulta,
+    duracion_otro: data.duracion_otro ?? CONFIG_DEFAULTS.duracion_otro,
+  };
+}
 
 // ─── Cliente Supabase para Edge Functions ──────────────────────────────
 
@@ -104,19 +146,31 @@ export function verificarAnticipacion(fechaHoraInicio: string, creadaEnTaller = 
   return { valido: true, mensaje: null };
 }
 
-export function verificarHorarioTaller(fechaHoraInicio: string, fechaHoraFin: string): { valido: boolean; mensaje: string | null } {
+export async function verificarHorarioTaller(
+  supabase: SupabaseClient,
+  fechaHoraInicio: string,
+  fechaHoraFin: string
+): Promise<{ valido: boolean; mensaje: string | null }> {
+  const config = await obtenerConfiguracion(supabase);
   const inicio = new Date(fechaHoraInicio);
   const fin = new Date(fechaHoraFin);
 
-  if (inicio.getDay() === 0) {
-    return { valido: false, mensaje: "El taller no abre los domingos" };
+  const diaSemana = inicio.getDay();
+  if (!config.dias_atencion.includes(diaSemana)) {
+    const nombresDias = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+    return { valido: false, mensaje: `El taller no atiende los ${nombresDias[diaSemana]}s` };
   }
+
+  const [hApertura, mApertura] = config.hora_apertura.split(":").map(Number);
+  const [hCierre, mCierre] = config.hora_cierre.split(":").map(Number);
+  const horaApertura = hApertura + mApertura / 60;
+  const horaCierre = hCierre + mCierre / 60;
 
   const horaInicio = inicio.getHours() + inicio.getMinutes() / 60;
   const horaFin = fin.getHours() + fin.getMinutes() / 60;
 
-  if (horaInicio < 9 || horaFin > 19) {
-    return { valido: false, mensaje: "El horario de atención es de 9:00 a.m. a 7:00 p.m." };
+  if (horaInicio < horaApertura || horaFin > horaCierre) {
+    return { valido: false, mensaje: `El horario de atención es de ${config.hora_apertura} a ${config.hora_cierre}` };
   }
 
   return { valido: true, mensaje: null };
@@ -177,7 +231,8 @@ export async function verificarPedidoActivo(
 
 // ─── Penalizaciones ───────────────────────────────────────────────────
 
-export function calcularPenalizacionMovimiento(fechaHoraOriginal: string) {
+export async function calcularPenalizacionMovimiento(supabase: SupabaseClient, fechaHoraOriginal: string) {
+  const config = await obtenerConfiguracion(supabase);
   const ahora = new Date();
   const original = new Date(fechaHoraOriginal);
   const horasAntes = (original.getTime() - ahora.getTime()) / (1000 * 60 * 60);
@@ -189,21 +244,22 @@ export function calcularPenalizacionMovimiento(fechaHoraOriginal: string) {
   if (horasAntes >= 24) {
     return {
       tipoPenalizacion: TIPOS_PENALIZACION.RETRASO_EXCESIVO,
-      monto: PENALIZACIONES_DEFAULT.MOVER_24_48,
+      monto: config.penalizacion_mover_24_48,
       requiereVerificacion: true,
-      mensaje: "Penalización de $50 MXN (verificar historial del mes)",
+      mensaje: `Penalización de $${config.penalizacion_mover_24_48} MXN (verificar historial del mes)`,
     };
   }
 
   return {
     tipoPenalizacion: TIPOS_PENALIZACION.RETRASO_EXCESIVO,
-    monto: PENALIZACIONES_DEFAULT.MOVER_MENOS_24,
+    monto: config.penalizacion_mover_menos_24,
     requiereVerificacion: false,
-    mensaje: "Penalización de $100 MXN",
+    mensaje: `Penalización de $${config.penalizacion_mover_menos_24} MXN`,
   };
 }
 
-export function calcularPenalizacionCancelacion(fechaHoraCita: string) {
+export async function calcularPenalizacionCancelacion(supabase: SupabaseClient, fechaHoraCita: string) {
+  const config = await obtenerConfiguracion(supabase);
   const ahora = new Date();
   const cita = new Date(fechaHoraCita);
   const horasAntes = (cita.getTime() - ahora.getTime()) / (1000 * 60 * 60);
@@ -215,15 +271,15 @@ export function calcularPenalizacionCancelacion(fechaHoraCita: string) {
   if (horasAntes >= 24) {
     return {
       tipoPenalizacion: TIPOS_PENALIZACION.CANCELACION_TARDIA,
-      monto: PENALIZACIONES_DEFAULT.CANCELAR_24_48,
-      mensaje: "Penalización de $75 MXN por cancelación tardía",
+      monto: config.penalizacion_cancelar_24_48,
+      mensaje: `Penalización de $${config.penalizacion_cancelar_24_48} MXN por cancelación tardía`,
     };
   }
 
   return {
     tipoPenalizacion: TIPOS_PENALIZACION.CANCELACION_TARDIA,
-    monto: PENALIZACIONES_DEFAULT.CANCELAR_MENOS_24,
-    mensaje: "Penalización de $150 MXN por cancelación de último momento",
+    monto: config.penalizacion_cancelar_menos_24,
+    mensaje: `Penalización de $${config.penalizacion_cancelar_menos_24} MXN por cancelación de último momento`,
   };
 }
 
@@ -241,7 +297,8 @@ export async function crearCita(supabase: SupabaseClient, datos: Record<string, 
   );
   if (!anticipacion.valido) throw new Error(anticipacion.mensaje!);
 
-  const horario = verificarHorarioTaller(
+  const horario = await verificarHorarioTaller(
+    supabase,
     datos.fecha_hora_inicio as string,
     datos.fecha_hora_fin as string
   );
@@ -309,13 +366,13 @@ export async function moverCita(
     throw new Error("Solo se pueden mover citas en estado Agendada o Confirmada");
   }
 
-  const horario = verificarHorarioTaller(nuevaFechaInicio, nuevaFechaFin);
+  const horario = await verificarHorarioTaller(supabase, nuevaFechaInicio, nuevaFechaFin);
   if (!horario.valido) throw new Error(horario.mensaje!);
 
   const disponibilidad = await verificarDisponibilidad(supabase, nuevaFechaInicio, nuevaFechaFin, idCita);
   if (!disponibilidad.valido) throw new Error(disponibilidad.mensaje!);
 
-  const penalizacion = calcularPenalizacionMovimiento(cita.fecha_hora_inicio);
+  const penalizacion = await calcularPenalizacionMovimiento(supabase, cita.fecha_hora_inicio);
 
   const { data: citaActualizada, error: updateError } = await supabase
     .from("citas")
@@ -370,7 +427,7 @@ export async function cancelarCita(
   let penalizacionCreada = null;
 
   if (canceladaPor !== CANCELADA_POR.TALLER) {
-    const calc = calcularPenalizacionCancelacion(cita.fecha_hora_inicio);
+    const calc = await calcularPenalizacionCancelacion(supabase, cita.fecha_hora_inicio);
 
     if (calc.monto > 0) {
       const { data: pen, error: penError } = await supabase
@@ -415,13 +472,15 @@ export async function marcarNoShow(supabase: SupabaseClient, idCita: number) {
     throw new Error("Solo se puede marcar como No Show citas Agendadas o Confirmadas");
   }
 
+  const config = await obtenerConfiguracion(supabase);
+
   const { data: penalizacion, error: penError } = await supabase
     .from("penalizaciones_cita")
     .insert([{
       id_cita: idCita,
       id_cliente: cita.id_cliente,
       tipo: TIPOS_PENALIZACION.NO_SHOW,
-      monto: PENALIZACIONES_DEFAULT.NO_SHOW,
+      monto: config.penalizacion_no_show,
       estado_cobro: "Pendiente",
     }])
     .select()
