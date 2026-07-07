@@ -105,8 +105,8 @@ export function WizardCita({ fechaInicial, horaInicial, onCerrar, onGuardada }) 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Nueva Cita</h2>
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Nueva Cita</h2>
           <button
             onClick={onCerrar}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -116,7 +116,7 @@ export function WizardCita({ fechaInicial, horaInicial, onCerrar, onGuardada }) 
         </div>
 
         {/* Indicador de progreso */}
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             {pasos.map((paso, index) => (
               <div key={paso.numero} className="flex items-center flex-1">
@@ -157,12 +157,12 @@ export function WizardCita({ fechaInicial, horaInicial, onCerrar, onGuardada }) 
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+        <div className="flex flex-col sm:flex-row justify-between px-4 py-3 sm:px-6 sm:py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl gap-3">
           <Button
             variant="ghost"
             onClick={pasoActual === 1 ? onCerrar : pasoAnterior}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto"
           >
             <ChevronLeft className="w-5 h-5" />
             {pasoActual === 1 ? 'Cancelar' : 'Anterior'}
@@ -173,7 +173,7 @@ export function WizardCita({ fechaInicial, horaInicial, onCerrar, onGuardada }) 
               variant="primary"
               onClick={siguientePaso}
               disabled={!validarPaso()}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               Siguiente
               <ChevronRight className="w-5 h-5" />
@@ -183,7 +183,7 @@ export function WizardCita({ fechaInicial, horaInicial, onCerrar, onGuardada }) 
               variant="success"
               onClick={handleGuardar}
               disabled={loading}
-              className="px-8"
+              className="w-full sm:w-auto sm:px-8"
             >
               {loading ? 'Guardando...' : '✓ Guardar Cita'}
             </Button>

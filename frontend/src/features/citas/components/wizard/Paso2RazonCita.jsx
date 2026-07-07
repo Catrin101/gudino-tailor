@@ -31,12 +31,12 @@ export function Paso2RazonCita({ razonSeleccionada, notas, pedidoVinculado, clie
   }, [clienteId])
 
   return (
-    <div className="p-6">
-      <h3 className="text-xl font-bold text-gray-900 mb-2">¿Para qué es la cita?</h3>
-      <p className="text-gray-600 mb-6">Selecciona el motivo</p>
+    <div className="p-4 sm:p-6">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">¿Para qué es la cita?</h3>
+      <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Selecciona el motivo</p>
 
       {/* Selector de razón */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {Object.entries(RAZONES_CITA).map(([clave, razon]) => {
           const Icono = ICONOS_RAZON[clave] || HelpCircle
           const seleccionada = razonSeleccionada === clave
@@ -45,17 +45,17 @@ export function Paso2RazonCita({ razonSeleccionada, notas, pedidoVinculado, clie
               key={clave}
               onClick={() => onActualizar({ razon: clave })}
               className={`
-                p-4 rounded-xl border-2 transition-all text-left
+                p-3 sm:p-4 rounded-xl border-2 transition-all text-left
                 ${seleccionada
                   ? 'border-primary-500 bg-primary-50 shadow-md'
                   : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}
               `}
             >
-              <Icono className={`w-6 h-6 mb-2 ${seleccionada ? 'text-primary-600' : 'text-gray-400'}`} />
-              <p className={`font-semibold text-sm ${seleccionada ? 'text-primary-700' : 'text-gray-900'}`}>
+              <Icono className={`w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2 ${seleccionada ? 'text-primary-600' : 'text-gray-400'}`} />
+              <p className={`font-semibold text-xs sm:text-sm ${seleccionada ? 'text-primary-700' : 'text-gray-900'}`}>
                 {razon.label}
               </p>
-              <p className="text-xs text-gray-500 mt-1">{razon.descripcion}</p>
+              <p className="text-xs text-gray-500 mt-1 hidden sm:block">{razon.descripcion}</p>
               <p className="text-xs text-gray-400 mt-1">~{razon.duracion} min</p>
             </button>
           )
@@ -63,7 +63,7 @@ export function Paso2RazonCita({ razonSeleccionada, notas, pedidoVinculado, clie
       </div>
 
       {/* Notas adicionales */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Notas adicionales {razonSeleccionada === 'OTRO' && <span className="text-red-500">*</span>}
         </label>

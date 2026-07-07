@@ -45,9 +45,9 @@ export function Paso1ClienteCita({ clienteSeleccionado, onSeleccionar }) {
   }
 
   return (
-    <div className="p-6">
-      <h3 className="text-xl font-bold text-gray-900 mb-2">¿Con quién es la cita?</h3>
-      <p className="text-gray-600 mb-6">Busca y selecciona el cliente</p>
+    <div className="p-4 sm:p-6">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">¿Con quién es la cita?</h3>
+      <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Busca y selecciona el cliente</p>
 
       <div className="relative mb-4">
         <input
@@ -64,7 +64,7 @@ export function Paso1ClienteCita({ clienteSeleccionado, onSeleccionar }) {
           }}
           placeholder="Buscar por nombre..."
           disabled={!!clienteSeleccionado}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg
+          className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 rounded-lg text-base sm:text-lg
                    focus:ring-2 focus:ring-primary-500 focus:border-transparent
                    disabled:bg-gray-100 disabled:cursor-not-allowed"
         />

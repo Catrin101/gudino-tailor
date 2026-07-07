@@ -71,9 +71,9 @@ export function Paso3FechaHora({ fechaSeleccionada, horaSeleccionada, duracion, 
   const hoy = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="p-6">
-      <h3 className="text-xl font-bold text-gray-900 mb-2">¿Cuándo será la cita?</h3>
-      <p className="text-gray-600 mb-6">Selecciona fecha y hora disponible</p>
+    <div className="p-4 sm:p-6">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">¿Cuándo será la cita?</h3>
+      <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Selecciona fecha y hora disponible</p>
 
       {/* Duración estimada */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 flex items-center gap-3">
@@ -105,18 +105,18 @@ export function Paso3FechaHora({ fechaSeleccionada, horaSeleccionada, duracion, 
       </div>
 
       {/* Selector de hora */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
           <Clock className="w-4 h-4" />
           Hora
         </label>
-        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
           {horasDisponibles.map(h => (
             <button
               key={h}
               onClick={() => setHora(h)}
               className={`
-                py-3 rounded-lg border-2 font-medium transition-all text-sm
+                py-2.5 sm:py-3 rounded-lg border-2 font-medium transition-all text-xs sm:text-sm
                 ${hora === h
                   ? 'border-primary-500 bg-primary-50 text-primary-700'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700'}
