@@ -38,9 +38,10 @@ export function CalendarioSemanal({ citas, fechaActual, onCitaClick, onSlotClick
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200">
+      <div className="overflow-x-auto">
       {/* Header con días */}
-      <div className="grid grid-cols-8 border-b border-gray-200">
+      <div className="grid grid-cols-8 border-b border-gray-200" style={{ minWidth: '640px' }}>
         <div className="p-3 bg-gray-50 border-r border-gray-200" />
         {dias.map((dia, i) => {
           const { nombre, numero } = formatearDia(dia)
@@ -65,7 +66,7 @@ export function CalendarioSemanal({ citas, fechaActual, onCitaClick, onSlotClick
       </div>
 
       {/* Cuerpo con horas */}
-      <div className="grid grid-cols-8 max-h-[600px] overflow-y-auto">
+      <div className="grid grid-cols-8 max-h-[600px] overflow-y-auto" style={{ minWidth: '640px' }}>
         {HORAS.map((hora) => (
           <div key={hora} className="contents">
             {/* Etiqueta de hora */}
@@ -109,6 +110,7 @@ export function CalendarioSemanal({ citas, fechaActual, onCitaClick, onSlotClick
             })}
           </div>
         ))}
+      </div>
       </div>
     </div>
   )

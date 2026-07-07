@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    @apply overflow-x-hidden;
+  }
+
   body {
     /* Fondo principal con gradiente sutil */
     @apply bg-gradient-to-br from-canvas-primary to-canvas-secondary text-primary-900;
