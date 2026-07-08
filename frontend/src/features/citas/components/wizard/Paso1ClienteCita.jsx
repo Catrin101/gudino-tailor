@@ -23,7 +23,7 @@ export function Paso1ClienteCita({ clienteSeleccionado, onSeleccionar }) {
           .from('clientes')
           .select('id_cliente, nombre, telefono')
           .ilike('nombre', `%${busqueda}%`)
-          .is('deleted_at', null)
+          .eq('activo', true)
           .limit(10)
         setResultados(data || [])
       } catch {

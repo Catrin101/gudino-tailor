@@ -16,6 +16,7 @@ export function Paso3FechaHora({ fechaSeleccionada, horaSeleccionada, duracion, 
   const horario = getHorario()
   const duraciones = getDuraciones()
   const duracionMin = duracion || duraciones[razon] || 30
+  const razonInfo = RAZONES_CITA[razon]
 
   // Generar horas disponibles según horario del taller
   const horasDisponibles = []
